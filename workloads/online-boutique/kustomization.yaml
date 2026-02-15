@@ -5,7 +5,3 @@ resources:
   - namespace.yaml
   - services.yaml
   - ingress.yaml
-
-# Override the domain via JSON patch.
-# ArgoCD injects the real domain from the Application spec's
-# kustomize.patches — keeping the domain out of this public repo.
