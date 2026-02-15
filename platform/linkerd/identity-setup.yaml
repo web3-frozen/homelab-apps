@@ -37,6 +37,30 @@ roleRef:
   name: linkerd-identity-setup
   apiGroup: rbac.authorization.k8s.io
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: linkerd-identity-setup-configmaps
+  namespace: linkerd
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: linkerd-identity-setup-configmaps
+  namespace: linkerd
+subjects:
+  - kind: ServiceAccount
+    name: linkerd-identity-setup
+    namespace: linkerd
+roleRef:
+  kind: Role
+  name: linkerd-identity-setup-configmaps
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -53,9 +77,9 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: setup
-          image: smallstep/step-cli:latest
+          image: bitnami/kubectl:1.31
           command:
-            - /bin/sh
+            - /bin/bash
             - -c
             - |
               set -eu
@@ -65,23 +89,27 @@ spec:
                 exit 0
               fi
 
-              echo "Generating Linkerd identity certificates..."
+              echo "Generating Linkerd identity certificates with openssl..."
 
               # Generate trust anchor (root CA) - valid for 10 years
-              step certificate create root.linkerd.cluster.local /tmp/ca.crt /tmp/ca.key \
-                --profile root-ca --no-password --insecure --not-after=87600h
+              openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 \
+                -keyout /tmp/ca.key -out /tmp/ca.crt -days 3650 -nodes \
+                -subj "/CN=root.linkerd.cluster.local"
 
               # Generate identity issuer cert - valid for 1 year
-              step certificate create identity.linkerd.cluster.local /tmp/issuer.crt /tmp/issuer.key \
-                --profile intermediate-ca --not-after=8760h --no-password --insecure \
-                --ca /tmp/ca.crt --ca-key /tmp/ca.key
+              openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 \
+                -keyout /tmp/issuer.key -out /tmp/issuer.csr -nodes \
+                -subj "/CN=identity.linkerd.cluster.local"
+              openssl x509 -req -in /tmp/issuer.csr -CA /tmp/ca.crt -CAkey /tmp/ca.key \
+                -CAcreateserial -out /tmp/issuer.crt -days 365 \
+                -extfile <(printf "basicConstraints=CA:TRUE")
 
-              # Store trust anchor as a secret
-              kubectl create secret generic linkerd-identity-trust-roots -n linkerd \
-                --from-file=ca-bundle.crt=/tmp/ca.crt
+              # Store trust anchor as a configmap (linkerd-control-plane expects this)
+              kubectl create configmap linkerd-identity-trust-roots -n linkerd \
+                --from-file=ca-bundle.crt=/tmp/ca.crt --dry-run=client -o yaml | kubectl apply -f -
 
               # Store issuer cert+key as a TLS secret
               kubectl create secret tls linkerd-identity-issuer -n linkerd \
-                --cert=/tmp/issuer.crt --key=/tmp/issuer.key
+                --cert=/tmp/issuer.crt --key=/tmp/issuer.key --dry-run=client -o yaml | kubectl apply -f -
 
               echo "Certificates generated and stored successfully."
