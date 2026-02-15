@@ -62,12 +62,18 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: setup
-          image: bitnami/kubectl:1.31
+          image: alpine:3.21
           command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
               set -eu
+              apk add --no-cache openssl curl >/dev/null 2>&1
+
+              # Install kubectl
+              curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')/kubectl"
+              chmod +x kubectl && mv kubectl /usr/local/bin/
+
               # Check if trust anchor already exists
               if kubectl get secret linkerd-identity-trust-roots -n linkerd 2>/dev/null; then
                 echo "Trust anchor already exists, skipping generation."
@@ -87,7 +93,9 @@ spec:
                 -subj "/CN=identity.linkerd.cluster.local"
               openssl x509 -req -in /tmp/issuer.csr -CA /tmp/ca.crt -CAkey /tmp/ca.key \
                 -CAcreateserial -out /tmp/issuer.crt -days 365 \
-                -extfile <(printf "basicConstraints=CA:TRUE")
+                -extfile /dev/stdin <<EXTEOF
+              basicConstraints=CA:TRUE
+              EXTEOF
 
               # Store trust anchor as a configmap (linkerd-control-plane expects this)
               kubectl create configmap linkerd-identity-trust-roots -n linkerd \
