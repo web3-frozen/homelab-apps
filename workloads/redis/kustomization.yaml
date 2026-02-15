@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: redis
 resources:
   - redis.yaml
+  - external-secret.yaml

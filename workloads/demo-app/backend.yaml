@@ -44,14 +44,14 @@ spec:
                 secretKeyRef:
                   name: demo-db-app
                   key: uri
-            - name: REDIS_URL
-              value: "redis://default:$(REDIS_PASSWORD)@redis-master.redis.svc.cluster.local:6379/0"
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: redis-password
                   key: password
                   optional: true
+            - name: REDIS_URL
+              value: "redis://default:$(REDIS_PASSWORD)@redis-master.redis.svc.cluster.local:6379/0"
           resources:
             requests:
               cpu: 50m
