@@ -213,10 +213,23 @@ jobs:
   deploy:
     name: Update GitOps
     needs: [build-push, security]
-    if: github.ref == 'refs/heads/main' && secrets.GITOPS_TOKEN != ''
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - name: Check GITOPS_TOKEN
+        id: check-token
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::GITOPS_TOKEN not set — skipping GitOps update"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          TOKEN: ${{ secrets.GITOPS_TOKEN }}
+
       - name: Checkout homelab-apps
+        if: steps.check-token.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           repository: web3-frozen/homelab-apps
@@ -224,14 +237,17 @@ jobs:
           ref: main
 
       - name: Setup Kustomize
+        if: steps.check-token.outputs.skip != 'true'
         uses: imranismail/setup-kustomize@v2
 
       - name: Update image tag
+        if: steps.check-token.outputs.skip != 'true'
         run: |
           cd ${{ inputs.workload-dir }}
           kustomize edit set image ${{ env.IMAGE }}=${{ env.IMAGE }}:${{ needs.build-push.outputs.image-tag }}
 
       - name: Commit and push
+        if: steps.check-token.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
