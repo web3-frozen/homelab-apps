@@ -62,6 +62,8 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: demo-frontend
+      imagePullSecrets:
+        - name: ghcr-creds
       containers:
         - name: demo-frontend
           image: ghcr.io/web3-frozen/demo-frontend
