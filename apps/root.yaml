@@ -1,0 +1,29 @@
+# Root App of Apps — bootstrapped by Pulumi (pulumi-k3s-proxmox).
+# This file is excluded from ArgoCD directory rendering via
+# spec.source.directory.exclude in the Pulumi-created root Application.
+# It exists here for documentation and reference only.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/web3-frozen/homelab-apps.git
+    targetRevision: main
+    path: apps
+    directory:
+      recurse: false
+      exclude: root.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

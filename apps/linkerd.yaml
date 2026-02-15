@@ -13,17 +13,12 @@ spec:
     repoURL: https://helm.linkerd.io/stable
     chart: linkerd-crds
     targetRevision: "1.8.0"
+    helm:
+      valuesObject:
+        installGatewayAPI: false
   destination:
     server: https://kubernetes.default.svc
     namespace: linkerd
-  ignoreDifferences:
-    - group: apiextensions.k8s.io
-      kind: CustomResourceDefinition
-      name: httproutes.gateway.networking.k8s.io
-      jsonPointers:
-        - /spec/versions
-        - /metadata/annotations
-        - /metadata/labels
   syncPolicy:
     automated:
       prune: true
@@ -31,7 +26,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - RespectIgnoreDifferences=true
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

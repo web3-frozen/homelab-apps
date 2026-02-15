@@ -1,7 +1,7 @@
 # Linkerd Trust Anchor + Identity Issuer Setup
 #
 # Linkerd requires mTLS certificates for its identity system.
-# This Job generates them automatically on first install using step-cli.
+# This Job generates them automatically on first install using openssl.
 # The trust anchor CA and issuer certs are stored as Kubernetes secrets.
 #
 # For production, replace this with cert-manager integration:
@@ -12,15 +12,21 @@ kind: ServiceAccount
 metadata:
   name: linkerd-identity-setup
   namespace: linkerd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: linkerd-identity-setup
   namespace: linkerd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 rules:
   - apiGroups: [""]
-    resources: ["secrets"]
+    resources: ["secrets", "configmaps"]
     verbs: ["get", "create", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -28,6 +34,9 @@ kind: RoleBinding
 metadata:
   name: linkerd-identity-setup
   namespace: linkerd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 subjects:
   - kind: ServiceAccount
     name: linkerd-identity-setup
@@ -35,30 +44,6 @@ subjects:
 roleRef:
   kind: Role
   name: linkerd-identity-setup
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: linkerd-identity-setup-configmaps
-  namespace: linkerd
-rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "create", "update", "patch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: linkerd-identity-setup-configmaps
-  namespace: linkerd
-subjects:
-  - kind: ServiceAccount
-    name: linkerd-identity-setup
-    namespace: linkerd
-roleRef:
-  kind: Role
-  name: linkerd-identity-setup-configmaps
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: batch/v1
