@@ -22,6 +22,7 @@ spec:
           existingSecretPasswordKey: password
         serviceAccount:
           create: true
+          name: redis-master
         master:
           persistence:
             size: 2Gi
