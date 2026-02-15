@@ -1,0 +1,50 @@
+# Shared Redis (Bitnami) for application caching
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    # Bootstrap password generation (PreSync hook)
+    - repoURL: https://github.com/web3-frozen/homelab-apps.git
+      targetRevision: main
+      path: platform/redis
+    # Redis Helm chart
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: redis
+      targetRevision: "20.6.0"
+      helm:
+        valuesObject:
+          architecture: standalone
+          auth:
+            enabled: true
+            existingSecret: redis-password
+            existingSecretPasswordKey: password
+          master:
+            persistence:
+              size: 2Gi
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: redis
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

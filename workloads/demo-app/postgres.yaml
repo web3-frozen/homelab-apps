@@ -1,0 +1,29 @@
+# CloudNativePG PostgreSQL Cluster for demo-app
+# Operator must be installed (apps/cloudnative-pg.yaml)
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: demo-db
+  namespace: demo-app
+spec:
+  instances: 1
+  storage:
+    size: 5Gi
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: "64MB"
+  bootstrap:
+    initdb:
+      database: tasks
+      owner: app
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  monitoring:
+    enablePodMonitor: true

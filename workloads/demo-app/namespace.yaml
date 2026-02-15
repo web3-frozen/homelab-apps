@@ -1,0 +1,9 @@
+# Demo App namespace with Linkerd mesh injection
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-app
+  labels:
+    goldilocks.fairwinds.com/enabled: "true"
+    linkerd.io/inject: enabled

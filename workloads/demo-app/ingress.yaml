@@ -1,0 +1,19 @@
+# Traefik IngressRoute for Demo App
+# Base domain (example.com) is replaced by the CMP plugin at deploy time
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: demo-app-ingress
+  namespace: demo-app
+  labels:
+    homelab.dev/subdomain: tasks
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`tasks.example.com`)
+      kind: Rule
+      services:
+        - name: demo-frontend
+          port: 80

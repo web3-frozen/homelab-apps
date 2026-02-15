@@ -1,0 +1,133 @@
+# Demo Frontend — React/TypeScript SPA served via nginx
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-frontend
+  namespace: demo-app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-frontend-nginx
+  namespace: demo-app
+data:
+  default.conf: |
+    server {
+      listen 80;
+      root /usr/share/nginx/html;
+      index index.html;
+
+      # SPA fallback
+      location / {
+        try_files $uri $uri/ /index.html;
+      }
+
+      # Proxy API requests to backend
+      location /api/ {
+        proxy_pass http://demo-api.demo-app.svc.cluster.local:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      # Health check
+      location /healthz {
+        return 200 'ok';
+        add_header Content-Type text/plain;
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-frontend
+  namespace: demo-app
+  labels:
+    app: demo-frontend
+    app.kubernetes.io/name: demo-frontend
+    app.kubernetes.io/part-of: demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-frontend
+  template:
+    metadata:
+      labels:
+        app: demo-frontend
+        app.kubernetes.io/name: demo-frontend
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      serviceAccountName: demo-frontend
+      containers:
+        - name: demo-frontend
+          image: ghcr.io/web3-frozen/demo-frontend
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: run
+              mountPath: /var/run
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: demo-frontend-nginx
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-frontend
+  namespace: demo-app
+  labels:
+    app: demo-frontend
+spec:
+  selector:
+    app: demo-frontend
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+      protocol: TCP
