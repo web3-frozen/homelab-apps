@@ -1,0 +1,9 @@
+# Google Online Boutique - Namespace with Linkerd mesh injection
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: online-boutique
+  labels:
+    goldilocks.fairwinds.com/enabled: "true"
+    linkerd.io/inject: enabled

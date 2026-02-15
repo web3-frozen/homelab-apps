@@ -1,0 +1,87 @@
+# Linkerd Trust Anchor + Identity Issuer Setup
+#
+# Linkerd requires mTLS certificates for its identity system.
+# This Job generates them automatically on first install using step-cli.
+# The trust anchor CA and issuer certs are stored as Kubernetes secrets.
+#
+# For production, replace this with cert-manager integration:
+# https://linkerd.io/2/tasks/automatically-rotating-control-plane-tls-credentials/
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: linkerd-identity-setup
+  namespace: linkerd
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: linkerd-identity-setup
+  namespace: linkerd
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: linkerd-identity-setup
+  namespace: linkerd
+subjects:
+  - kind: ServiceAccount
+    name: linkerd-identity-setup
+    namespace: linkerd
+roleRef:
+  kind: Role
+  name: linkerd-identity-setup
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: linkerd-identity-setup
+  namespace: linkerd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: linkerd-identity-setup
+      restartPolicy: OnFailure
+      containers:
+        - name: setup
+          image: smallstep/step-cli:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # Check if trust anchor already exists
+              if kubectl get secret linkerd-identity-trust-roots -n linkerd 2>/dev/null; then
+                echo "Trust anchor already exists, skipping generation."
+                exit 0
+              fi
+
+              echo "Generating Linkerd identity certificates..."
+
+              # Generate trust anchor (root CA) - valid for 10 years
+              step certificate create root.linkerd.cluster.local /tmp/ca.crt /tmp/ca.key \
+                --profile root-ca --no-password --insecure --not-after=87600h
+
+              # Generate identity issuer cert - valid for 1 year
+              step certificate create identity.linkerd.cluster.local /tmp/issuer.crt /tmp/issuer.key \
+                --profile intermediate-ca --not-after=8760h --no-password --insecure \
+                --ca /tmp/ca.crt --ca-key /tmp/ca.key
+
+              # Store trust anchor as a secret
+              kubectl create secret generic linkerd-identity-trust-roots -n linkerd \
+                --from-file=ca-bundle.crt=/tmp/ca.crt
+
+              # Store issuer cert+key as a TLS secret
+              kubectl create secret tls linkerd-identity-issuer -n linkerd \
+                --cert=/tmp/issuer.crt --key=/tmp/issuer.key
+
+              echo "Certificates generated and stored successfully."

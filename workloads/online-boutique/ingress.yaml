@@ -1,0 +1,17 @@
+# Traefik IngressRoute for Online Boutique Frontend
+# Domain is injected via Kustomize patch — see kustomization.yaml
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: online-boutique-ingress
+  namespace: online-boutique
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`shop.example.com`)
+      kind: Rule
+      services:
+        - name: frontend
+          port: 80
