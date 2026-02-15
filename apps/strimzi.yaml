@@ -24,8 +24,11 @@ spec:
             cpu: 100m
             memory: 384Mi
           limits:
-            cpu: 500m
-            memory: 512Mi
+            cpu: "1"
+            memory: 768Mi
+        extraEnvs:
+          - name: JAVA_OPTS
+            value: "-Xms128m -Xmx384m -Dlog4j2.configurationFile=file:/opt/strimzi/custom-config/log4j2.properties -Dvertx.cacheDirBase=/tmp/vertx-cache -Djava.security.egd=file:/dev/./urandom -XX:+ExitOnOutOfMemoryError"
   destination:
     server: https://kubernetes.default.svc
     namespace: strimzi
