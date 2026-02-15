@@ -68,6 +68,12 @@ spec:
           enabled: false
         lokiCanary:
           enabled: false
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jqPathExpressions:
+        - .spec.volumeClaimTemplates[]?.spec
+        - .spec.persistentVolumeClaimRetentionPolicy
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
