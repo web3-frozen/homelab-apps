@@ -7,27 +7,20 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  sources:
-    # Bootstrap secret generation (PreSync hook — runs once)
-    - repoURL: https://github.com/web3-frozen/homelab-apps.git
-      targetRevision: main
-      path: platform/infisical
-    # Infisical Helm chart
-    - repoURL: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
-      chart: infisical-standalone
-      targetRevision: "1.7.2"
-      helm:
-        valuesObject:
-          # Use built-in PostgreSQL and Redis for homelab (simplicity)
-          postgresql:
-            enabled: true
-          redis:
-            enabled: true
-          ingress:
+  source:
+    repoURL: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
+    chart: infisical-standalone
+    targetRevision: "1.7.2"
+    helm:
+      valuesObject:
+        postgresql:
+          enabled: true
+        redis:
+          enabled: true
+        ingress:
+          enabled: false
+          nginx:
             enabled: false
-            # Disable bundled nginx — we use Traefik as cluster ingress
-            nginx:
-              enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: infisical
