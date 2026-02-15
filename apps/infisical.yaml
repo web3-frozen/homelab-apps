@@ -9,7 +9,7 @@ spec:
   project: default
   sources:
     # Bootstrap secret generation (PreSync hook — runs once)
-    - repoURL: https://github.com/mpleung-zz/homelab-apps.git
+    - repoURL: https://github.com/web3-frozen/homelab-apps.git
       targetRevision: main
       path: platform/infisical
     # Infisical Helm chart
