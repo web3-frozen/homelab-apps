@@ -132,10 +132,14 @@ jobs:
     needs: lint-test
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.meta.outputs.version }}
+      image-tag: ${{ steps.sha-tag.outputs.tag }}
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute SHA tag
+        id: sha-tag
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
