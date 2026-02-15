@@ -10,6 +10,6 @@ resources:
 
 images:
   - name: ghcr.io/web3-frozen/demo-api
-    newTag: latest
+    newTag: "13e9df9"
   - name: ghcr.io/web3-frozen/demo-frontend
-    newTag: latest
+    newTag: "295b6ba"

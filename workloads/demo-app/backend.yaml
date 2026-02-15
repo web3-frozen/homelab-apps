@@ -29,8 +29,6 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: demo-api
-      imagePullSecrets:
-        - name: ghcr-creds
       containers:
         - name: demo-api
           image: ghcr.io/web3-frozen/demo-api
