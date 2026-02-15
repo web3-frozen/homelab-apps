@@ -124,7 +124,7 @@ jobs:
 
       - name: Node test
         if: inputs.node-version != ''
-        run: npm test -- --coverage --run
+        run: npm test -- --run
 
   # ── Build & Push Container ──────────────────────────────────
   build-push:
@@ -213,7 +213,7 @@ jobs:
   deploy:
     name: Update GitOps
     needs: [build-push, security]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && secrets.GITOPS_TOKEN != ''
     runs-on: ubuntu-latest
     steps:
       - name: Checkout homelab-apps
