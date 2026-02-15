@@ -2,14 +2,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - namespace.yaml
-  - postgres.yaml
-  - backend.yaml
-  - frontend.yaml
-  - ingress.yaml
+- namespace.yaml
+- postgres.yaml
+- backend.yaml
+- frontend.yaml
+- ingress.yaml
 
 images:
-  - name: ghcr.io/web3-frozen/demo-api
-    newTag: "b6c9165"
-  - name: ghcr.io/web3-frozen/demo-frontend
-    newTag: "295b6ba"
+- name: ghcr.io/web3-frozen/demo-api
+  newName: ghcr.io/web3-frozen/demo-api
+  newTag: d5d2bb6
+- name: ghcr.io/web3-frozen/demo-frontend
+  newTag: 295b6ba
