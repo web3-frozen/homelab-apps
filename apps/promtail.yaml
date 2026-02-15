@@ -1,0 +1,49 @@
+# Promtail — Log collector (DaemonSet on every node)
+# Ships container logs from /var/log/pods to Loki.
+# Auto-discovers pods via Kubernetes API and adds labels
+# (namespace, pod, container) for easy querying in Grafana.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: promtail
+    targetRevision: "6.16.6"
+    helm:
+      valuesObject:
+        config:
+          clients:
+            - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+          snippets:
+            # Add useful labels for querying
+            pipelineStages:
+              - cri: {}
+              - labeldrop:
+                  - filename
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        serviceMonitor:
+          enabled: true
+        tolerations:
+          - operator: Exists
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

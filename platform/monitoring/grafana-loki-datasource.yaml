@@ -1,0 +1,27 @@
+# Grafana datasource ConfigMap — auto-discovered by Grafana sidecar
+# The kube-prometheus-stack Grafana sidecar watches for ConfigMaps
+# with label grafana_datasource=1 and auto-provisions them.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-loki
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+data:
+  loki-datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.monitoring.svc.cluster.local:3100
+        isDefault: false
+        jsonData:
+          maxLines: 1000
+          derivedFields:
+            - datasourceUid: prometheus
+              matcherRegex: '"trace_id":"(\w+)"'
+              name: TraceID
+              url: ""
