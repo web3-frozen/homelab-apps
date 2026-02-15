@@ -124,7 +124,7 @@ jobs:
 
       - name: Node test
         if: inputs.node-version != ''
-        run: npm test -- --coverage --watchAll=false
+        run: npm test -- --coverage --run
 
   # ── Build & Push Container ──────────────────────────────────
   build-push:
