@@ -19,6 +19,13 @@ spec:
     helm:
       valuesObject:
         watchAnyNamespace: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: strimzi
