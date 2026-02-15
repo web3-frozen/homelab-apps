@@ -25,9 +25,9 @@ spec:
             enabled: true
           ingress:
             enabled: false
-          # Disable bundled nginx — we use Traefik as cluster ingress
-          nginx:
-            enabled: false
+            # Disable bundled nginx — we use Traefik as cluster ingress
+            nginx:
+              enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: infisical
