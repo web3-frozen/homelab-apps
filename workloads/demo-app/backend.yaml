@@ -54,10 +54,6 @@ spec:
                   name: redis-password
                   key: password
                   optional: true
-            - name: KAFKA_BROKERS
-              value: "demo-kafka-kafka-bootstrap.demo-app.svc.cluster.local:9092"
-            - name: KAFKA_TOPIC
-              value: "task-events"
           resources:
             requests:
               cpu: 50m
