@@ -10,7 +10,7 @@ resources:
 images:
 - name: ghcr.io/web3-frozen/defi-lending-api
   newName: ghcr.io/web3-frozen/defi-lending-api
-  newTag: fd24b74
+  newTag: 476d0e1
 - name: ghcr.io/web3-frozen/defi-lending-frontend
   newName: ghcr.io/web3-frozen/defi-lending-frontend
   newTag: e31603d
