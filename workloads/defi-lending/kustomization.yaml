@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+- backend.yaml
+- frontend.yaml
+- ingress.yaml
+
+images:
+- name: ghcr.io/web3-frozen/defi-lending-api
+  newName: ghcr.io/web3-frozen/defi-lending-api
+  newTag: latest
+- name: ghcr.io/web3-frozen/defi-lending-frontend
+  newName: ghcr.io/web3-frozen/defi-lending-frontend
+  newTag: latest
