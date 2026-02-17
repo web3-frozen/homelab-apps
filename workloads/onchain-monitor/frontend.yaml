@@ -40,7 +40,7 @@ spec:
               protocol: TCP
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: "https://monitoring.example.com/api-backend"
+              value: ""
           resources:
             requests:
               cpu: 25m

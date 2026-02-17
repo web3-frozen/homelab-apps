@@ -64,7 +64,7 @@ spec:
             - name: INFISICAL_ENV
               value: "prod"
             - name: FRONTEND_ORIGIN
-              value: "https://monitoring.example.com"
+              value: "https://monitoring.dummysui.monster"
           resources:
             requests:
               cpu: 50m

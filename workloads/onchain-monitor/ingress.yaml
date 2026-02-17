@@ -19,14 +19,14 @@ spec:
         - name: onchain-monitor-frontend
           port: 3000
     # Backend API — path prefix routing
-    - match: Host(`monitoring.example.com`) && PathPrefix(`/api-backend`)
+    - match: Host(`monitoring.example.com`) && PathPrefix(`/api`)
       kind: Rule
-      middlewares:
-        - name: strip-api-backend
       services:
         - name: onchain-monitor-api
           port: 8080
 ---
+# strip-api-backend middleware kept for backward compatibility but no longer
+# referenced by the IngressRoute (frontend uses relative /api/* paths).
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
