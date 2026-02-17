@@ -1,0 +1,28 @@
+# CloudNativePG PostgreSQL for onchain-monitor
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: onchain-monitor-db
+  namespace: onchain-monitor
+spec:
+  instances: 1
+  storage:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  monitoring:
+    enablePodMonitor: true
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: 64MB
+  bootstrap:
+    initdb:
+      database: onchain_monitor
+      owner: app

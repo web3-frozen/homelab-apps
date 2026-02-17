@@ -1,0 +1,93 @@
+# Onchain Monitor — Next.js frontend
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: onchain-monitor-frontend
+  namespace: onchain-monitor
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onchain-monitor-frontend
+  namespace: onchain-monitor
+  labels:
+    app: onchain-monitor-frontend
+    app.kubernetes.io/name: onchain-monitor-frontend
+    app.kubernetes.io/part-of: onchain-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onchain-monitor-frontend
+  template:
+    metadata:
+      labels:
+        app: onchain-monitor-frontend
+        app.kubernetes.io/name: onchain-monitor-frontend
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      serviceAccountName: onchain-monitor-frontend
+      containers:
+        - name: frontend
+          image: ghcr.io/web3-frozen/onchain-monitor-frontend
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://monitoring.example.com/api-backend"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nextjs-cache
+              mountPath: /app/.next/cache
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nextjs-cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: onchain-monitor-frontend
+  namespace: onchain-monitor
+  labels:
+    app: onchain-monitor-frontend
+spec:
+  selector:
+    app: onchain-monitor-frontend
+  ports:
+    - port: 3000
+      targetPort: http
+      name: http
+      protocol: TCP

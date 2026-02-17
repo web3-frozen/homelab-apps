@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: onchain-monitor
+  labels:
+    goldilocks.fairwinds.com/enabled: "true"
+    linkerd.io/inject: enabled
