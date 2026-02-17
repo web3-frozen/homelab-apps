@@ -29,6 +29,8 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: onchain-monitor-api
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       containers:
         - name: onchain-monitor-api
           image: ghcr.io/web3-frozen/onchain-monitor
