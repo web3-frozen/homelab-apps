@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: "trivy-results.sarif"
 
@@ -217,7 +217,7 @@ jobs:
   deploy:
     name: Update GitOps
     needs: [build-push, security]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && always() && needs.build-push.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Check GITOPS_TOKEN
