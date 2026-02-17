@@ -44,11 +44,23 @@ spec:
                 secretKeyRef:
                   name: onchain-monitor-db-app
                   key: uri
-            - name: TELEGRAM_BOT_TOKEN
+            - name: INFISICAL_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: telegram-bot-token
-                  key: token
+                  name: infisical-machine-identity
+                  key: clientId
+            - name: INFISICAL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: infisical-machine-identity
+                  key: clientSecret
+            - name: INFISICAL_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: infisical-config
+                  key: projectId
+            - name: INFISICAL_ENV
+              value: "prod"
             - name: FRONTEND_ORIGIN
               value: "https://monitoring.example.com"
           resources:

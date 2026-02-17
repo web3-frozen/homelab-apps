@@ -7,7 +7,6 @@ resources:
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
-- external-secret.yaml
 
 images:
 - name: ghcr.io/web3-frozen/onchain-monitor
