@@ -13,7 +13,7 @@ resources:
 images:
 - name: ghcr.io/web3-frozen/onchain-monitor
   newName: ghcr.io/web3-frozen/onchain-monitor
-  newTag: 175b330
+  newTag: d14a022
 - name: ghcr.io/web3-frozen/onchain-monitor-frontend
   newName: ghcr.io/web3-frozen/onchain-monitor-frontend
   newTag: 12da44c
