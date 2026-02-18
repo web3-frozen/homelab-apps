@@ -67,6 +67,8 @@ spec:
               value: "https://monitoring.dummysui.monster"
             - name: REDIS_URL
               value: "redis://redis-master.redis.svc.cluster.local:6379/0"
+            - name: HOME
+              value: "/tmp"
           resources:
             requests:
               cpu: 50m
