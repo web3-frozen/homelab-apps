@@ -1,0 +1,18 @@
+# ServiceMonitor — Prometheus auto-discovers and scrapes /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: onchain-monitor-api
+  namespace: onchain-monitor
+  labels:
+    app: onchain-monitor-api
+    app.kubernetes.io/part-of: onchain-monitor
+spec:
+  selector:
+    matchLabels:
+      app: onchain-monitor-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

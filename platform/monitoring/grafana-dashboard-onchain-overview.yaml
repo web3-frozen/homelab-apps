@@ -1,0 +1,169 @@
+# Grafana Dashboard — Onchain Monitor Overview
+# Auto-provisioned by Grafana sidecar (label: grafana_dashboard=1)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-onchain-overview
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Onchain Monitor"
+data:
+  onchain-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "title": "Uptime",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "up{job=\"onchain-monitor-api\"}",
+              "legendFormat": "up"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "DOWN", "color": "red" } }, "type": "value" },
+                { "options": { "1": { "text": "UP", "color": "green" } }, "type": "value" }
+              ],
+              "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+            }
+          }
+        },
+        {
+          "title": "Request Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 4, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_http_requests_total[5m])) by (status_code)",
+              "legendFormat": "{{status_code}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "drawStyle": "line", "fillOpacity": 15, "stacking": { "mode": "normal" } }
+            }
+          }
+        },
+        {
+          "title": "Requests In Flight",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_http_requests_in_flight",
+              "legendFormat": "in-flight"
+            }
+          ]
+        },
+        {
+          "title": "Error Rate",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(onchain_monitor_http_requests_total[5m]))",
+              "legendFormat": "5xx rate"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.01 }, { "color": "red", "value": 0.05 }] }
+            }
+          }
+        },
+        {
+          "title": "Pod Restarts",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=\"onchain-monitor\", container=\"onchain-monitor-api\"})",
+              "legendFormat": "restarts"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 3 }, { "color": "red", "value": 10 }] }
+            }
+          }
+        },
+        {
+          "title": "Request Latency (p50 / p95 / p99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(onchain_monitor_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p50"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(onchain_monitor_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(onchain_monitor_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "title": "Pod CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"onchain-monitor\", container=\"onchain-monitor-api\"}[5m]))",
+              "legendFormat": "CPU"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "drawStyle": "line", "fillOpacity": 20 }
+            }
+          }
+        },
+        {
+          "title": "Pod Memory Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"onchain-monitor\", container=\"onchain-monitor-api\"})",
+              "legendFormat": "Memory"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "drawStyle": "line", "fillOpacity": 20 }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["onchain-monitor"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Onchain Monitor — Overview",
+      "uid": "onchain-monitor-overview"
+    }

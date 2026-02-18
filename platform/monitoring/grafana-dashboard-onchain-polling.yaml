@@ -1,0 +1,176 @@
+# Grafana Dashboard — Onchain Monitor Polling & Sources
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-onchain-polling
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Onchain Monitor"
+data:
+  onchain-polling.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "title": "Poll Success / Failure Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_poll_total{status=\"success\"}[5m])) by (source)",
+              "legendFormat": "{{source}} success"
+            },
+            {
+              "expr": "sum(rate(onchain_monitor_poll_total{status=\"error\"}[5m])) by (source)",
+              "legendFormat": "{{source}} error"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": { "drawStyle": "bars", "fillOpacity": 50, "stacking": { "mode": "normal" } }
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byRegexp", "options": "error" },
+                "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Poll Duration per Source",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(onchain_monitor_poll_duration_seconds_bucket[5m])) by (le, source))",
+              "legendFormat": "{{source}} p95"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(onchain_monitor_poll_duration_seconds_bucket[5m])) by (le, source))",
+              "legendFormat": "{{source}} p50"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "title": "Last Successful Poll",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "time() - onchain_monitor_poll_last_success_timestamp",
+              "legendFormat": "{{source}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 120 }, { "color": "red", "value": 300 }] }
+            }
+          }
+        },
+        {
+          "title": "Snapshot Age",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_snapshot_age_seconds",
+              "legendFormat": "{{source}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "drawStyle": "line", "fillOpacity": 10, "thresholdsStyle": { "mode": "line" } },
+              "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 120 }] }
+            }
+          }
+        },
+        {
+          "title": "Snapshots in Memory",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 8 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_snapshot_count",
+              "legendFormat": "{{source}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+            }
+          }
+        },
+        {
+          "title": "TVL",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_business_metric_value{metric_name=\"tvl\"}",
+              "legendFormat": "{{source}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "custom": { "drawStyle": "line", "fillOpacity": 15 }
+            }
+          }
+        },
+        {
+          "title": "Token Prices",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_business_metric_value{metric_name=~\"price|dust_price|avlt_price\"}",
+              "legendFormat": "{{source}} {{metric_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "title": "Fear & Greed Index",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_business_metric_value{metric_name=\"fear_greed_index\"}",
+              "legendFormat": "Fear & Greed"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "min": 0, "max": 100,
+              "thresholds": { "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 25 }, { "color": "yellow", "value": 45 }, { "color": "green", "value": 55 }, { "color": "super-light-green", "value": 75 }] },
+              "custom": { "drawStyle": "line", "fillOpacity": 20, "thresholdsStyle": { "mode": "area" } }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["onchain-monitor"],
+      "time": { "from": "now-6h", "to": "now" },
+      "title": "Onchain Monitor — Polling & Sources",
+      "uid": "onchain-monitor-polling"
+    }

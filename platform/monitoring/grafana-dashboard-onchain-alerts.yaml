@@ -1,0 +1,169 @@
+# Grafana Dashboard — Onchain Monitor Alerts & Subscriptions
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-onchain-alerts
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Onchain Monitor"
+data:
+  onchain-alerts.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "title": "Alerts Sent Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_alerts_sent_total[5m])) by (source, type)",
+              "legendFormat": "{{source}} / {{type}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": { "drawStyle": "line", "fillOpacity": 15 }
+            }
+          }
+        },
+        {
+          "title": "Alert Failures Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_alerts_failed_total[5m])) by (source, type)",
+              "legendFormat": "{{source}} / {{type}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "color": { "fixedColor": "red", "mode": "fixed" },
+              "custom": { "drawStyle": "line", "fillOpacity": 15 }
+            }
+          }
+        },
+        {
+          "title": "Deduplicated Alerts Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(rate(onchain_monitor_alerts_deduplicated_total[5m])) by (source, type)",
+              "legendFormat": "{{source}} / {{type}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "color": { "fixedColor": "yellow", "mode": "fixed" },
+              "custom": { "drawStyle": "line", "fillOpacity": 10 }
+            }
+          }
+        },
+        {
+          "title": "Total Alerts Sent",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(onchain_monitor_alerts_sent_total)",
+              "legendFormat": "sent"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "green", "value": null }] }
+            }
+          }
+        },
+        {
+          "title": "Total Alert Failures",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(onchain_monitor_alerts_failed_total)",
+              "legendFormat": "failed"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+            }
+          }
+        },
+        {
+          "title": "Total Deduplicated",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(onchain_monitor_alerts_deduplicated_total)",
+              "legendFormat": "deduped"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+            }
+          }
+        },
+        {
+          "title": "Active Subscriptions by Event",
+          "type": "barchart",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_business_subscriptions_active",
+              "legendFormat": "{{event_name}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" }
+            }
+          }
+        },
+        {
+          "title": "Linked Telegram Users",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 16 },
+          "targets": [
+            {
+              "expr": "onchain_monitor_business_telegram_linked_users",
+              "legendFormat": "users"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": { "steps": [{ "color": "blue", "value": null }] }
+            }
+          }
+        },
+        {
+          "title": "Alerts Sent (last 24h by type)",
+          "type": "piechart",
+          "gridPos": { "h": 8, "w": 6, "x": 18, "y": 16 },
+          "targets": [
+            {
+              "expr": "sum(increase(onchain_monitor_alerts_sent_total[24h])) by (type)",
+              "legendFormat": "{{type}}"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["onchain-monitor"],
+      "time": { "from": "now-6h", "to": "now" },
+      "title": "Onchain Monitor — Alerts & Subscriptions",
+      "uid": "onchain-monitor-alerts"
+    }

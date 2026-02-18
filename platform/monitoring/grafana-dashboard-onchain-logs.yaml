@@ -1,0 +1,94 @@
+# Grafana Dashboard — Onchain Monitor Logs (via Loki)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-onchain-logs
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: "Onchain Monitor"
+data:
+  onchain-logs.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+        {
+          "title": "Log Volume by Level",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "expr": "sum(count_over_time({namespace=\"onchain-monitor\"} | json | level=\"info\" [1m]))",
+              "legendFormat": "info"
+            },
+            {
+              "expr": "sum(count_over_time({namespace=\"onchain-monitor\"} | json | level=\"warn\" [1m]))",
+              "legendFormat": "warn"
+            },
+            {
+              "expr": "sum(count_over_time({namespace=\"onchain-monitor\"} | json | level=\"error\" [1m]))",
+              "legendFormat": "error"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "drawStyle": "bars", "fillOpacity": 50, "stacking": { "mode": "normal" } }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "info" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "warn" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "error" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+            ]
+          }
+        },
+        {
+          "title": "Error Logs",
+          "type": "logs",
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "expr": "{namespace=\"onchain-monitor\"} | json | level=\"error\"",
+              "legendFormat": ""
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "sortOrder": "Descending",
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "wrapLogMessage": true
+          }
+        },
+        {
+          "title": "All Logs (filterable)",
+          "type": "logs",
+          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 20 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "targets": [
+            {
+              "expr": "{namespace=\"onchain-monitor\"} | json",
+              "legendFormat": ""
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "sortOrder": "Descending",
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "wrapLogMessage": true
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["onchain-monitor"],
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Onchain Monitor — Logs",
+      "uid": "onchain-monitor-logs"
+    }

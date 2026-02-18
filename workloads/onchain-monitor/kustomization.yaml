@@ -7,6 +7,8 @@ resources:
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
+- servicemonitor.yaml
+- prometheusrules.yaml
 
 images:
 - name: ghcr.io/web3-frozen/onchain-monitor

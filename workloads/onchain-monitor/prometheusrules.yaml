@@ -1,0 +1,74 @@
+# PrometheusRules — infrastructure alerting for onchain-monitor
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: onchain-monitor-alerts
+  namespace: onchain-monitor
+  labels:
+    app.kubernetes.io/part-of: onchain-monitor
+spec:
+  groups:
+    - name: onchain-monitor.rules
+      rules:
+        # App unreachable for >2 minutes
+        - alert: OnchainMonitorDown
+          expr: up{job="onchain-monitor-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Onchain Monitor API is down"
+            description: "The onchain-monitor-api target has been unreachable for more than 2 minutes."
+
+        # HTTP 5xx error rate >5% for 5 minutes
+        - alert: OnchainMonitorHighErrorRate
+          expr: |
+            (
+              sum(rate(onchain_monitor_http_requests_total{status_code=~"5.."}[5m]))
+              /
+              sum(rate(onchain_monitor_http_requests_total[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High HTTP error rate on Onchain Monitor"
+            description: "HTTP 5xx error rate is above 5% for the last 5 minutes (current: {{ $value | humanizePercentage }})."
+
+        # Any source poll error rate >50% over 5 minutes
+        - alert: OnchainMonitorPollFailure
+          expr: |
+            (
+              sum by (source) (rate(onchain_monitor_poll_total{status="error"}[5m]))
+              /
+              sum by (source) (rate(onchain_monitor_poll_total[5m]))
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Poll failures for source {{ $labels.source }}"
+            description: "Source {{ $labels.source }} has >50% poll failure rate for 5 minutes."
+
+        # Last successful poll >3 minutes ago
+        - alert: OnchainMonitorPollStale
+          expr: |
+            (time() - onchain_monitor_poll_last_success_timestamp) > 180
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Stale data from source {{ $labels.source }}"
+            description: "Source {{ $labels.source }} last polled successfully {{ $value | humanizeDuration }} ago."
+
+        # p95 HTTP latency >2s for 5 minutes
+        - alert: OnchainMonitorHighLatency
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(onchain_monitor_http_request_duration_seconds_bucket[5m]))) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High API latency on Onchain Monitor"
+            description: "p95 HTTP request latency is above 2s for the last 5 minutes."
