@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - postgres.yaml
+- redis-secret.yaml
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
