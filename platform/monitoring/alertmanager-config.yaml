@@ -24,11 +24,11 @@ spec:
             name: alertmanager-telegram
             key: token
           message: |
-            🔔 *{{ .Status | toUpper }}* {{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }}
+            🔔 <b>{{ .Status | toUpper }}</b> {{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }}
 
             {{ range .Alerts }}
-            *{{ .Labels.alertname }}* ({{ .Labels.severity }})
+            <b>{{ .Labels.alertname }}</b> ({{ .Labels.severity }})
             {{ .Annotations.summary }}
             {{ .Annotations.description }}
             {{ end }}
-          parseMode: MarkdownV2
+          parseMode: HTML
