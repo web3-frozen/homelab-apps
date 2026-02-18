@@ -86,13 +86,20 @@ spec:
               port: http
             initialDelaySeconds: 3
             periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           securityContext:
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-            runAsUser: 65534
+            runAsUser: 10001
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi
 ---
 apiVersion: v1
 kind: Service
