@@ -72,3 +72,18 @@ spec:
           annotations:
             summary: "High API latency on Onchain Monitor"
             description: "p95 HTTP request latency is above 2s for the last 5 minutes."
+
+        # PostgreSQL PVC storage usage >80%
+        - alert: OnchainMonitorDBStorageHigh
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes{namespace="onchain-monitor", persistentvolumeclaim=~"onchain-monitor-db.*"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace="onchain-monitor", persistentvolumeclaim=~"onchain-monitor-db.*"}
+            ) > 0.8
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Onchain Monitor DB storage above 80%"
+            description: "PVC {{ $labels.persistentvolumeclaim }} is at {{ $value | humanizePercentage }} capacity. Current size: 5Gi. Resize via postgres.yaml storage.size."
