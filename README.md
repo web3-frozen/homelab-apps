@@ -8,11 +8,13 @@ Push to `main` → ArgoCD auto-syncs everything.
 | Category | Tool | Purpose |
 |----------|------|---------|
 | **Demo App** | [Google Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) | 10-microservice e-commerce demo (Go, Python, Java, C#, Node.js) |
+| **Monitoring App** | [Onchain Monitor](workloads/onchain-monitor/) | DeFi metrics monitoring with Telegram alerts (Go backend + Next.js frontend) |
 | **Service Mesh** | [Linkerd](https://linkerd.io/) | Lightweight mTLS, traffic metrics, golden signals |
 | **Secrets** | [External Secrets Operator](https://external-secrets.io/) + [Infisical](https://infisical.com/) | Secret management with self-hosted backend |
 | **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
+| **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
 ## Directory Structure
 
@@ -29,12 +31,17 @@ homelab-apps/
 │   └── reloader.yaml            # ConfigMap/Secret watcher
 ├── platform/                    # Platform component manifests
 │   ├── linkerd/                 # Linkerd identity cert setup Job
-│   └── kyverno/                 # Kyverno cluster policies
+│   ├── kyverno/                 # Kyverno cluster policies
+│   └── monitoring/              # AlertManagerConfig (Telegram), Grafana dashboards
 └── workloads/                   # Application workloads
-    └── online-boutique/         # Google Online Boutique manifests
-        ├── namespace.yaml       # Namespace with Linkerd injection
-        ├── services.yaml        # All 10 microservices + Redis
-        └── ingress.yaml         # Traefik IngressRoute → shop.<your-domain>
+    ├── online-boutique/         # Google Online Boutique manifests
+    │   ├── namespace.yaml
+    │   ├── services.yaml
+    │   └── ingress.yaml
+    └── onchain-monitor/         # Onchain Monitor workload
+        ├── kustomization.yaml
+        ├── servicemonitor.yaml  # Prometheus scrape config
+        └── prometheusrules.yaml # Alert rules (app health + DB storage)
 ```
 
 ## Access URLs
