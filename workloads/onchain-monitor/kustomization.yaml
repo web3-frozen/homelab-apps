@@ -16,4 +16,4 @@ images:
   newTag: c1ff9ec
 - name: ghcr.io/web3-frozen/onchain-monitor-frontend
   newName: ghcr.io/web3-frozen/onchain-monitor-frontend
-  newTag: d3b9b84
+  newTag: ba19bc6
