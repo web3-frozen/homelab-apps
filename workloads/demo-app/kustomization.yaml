@@ -12,7 +12,7 @@ resources:
 images:
 - name: ghcr.io/web3-frozen/demo-api
   newName: ghcr.io/web3-frozen/demo-api
-  newTag: d5d2bb6
+  newTag: 07ac9e4
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
   newTag: b75cc2a
