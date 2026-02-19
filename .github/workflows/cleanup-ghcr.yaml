@@ -31,4 +31,4 @@ jobs:
           package-type: container
           min-versions-to-keep: 20
           delete-only-untagged-versions: false
-          token: ${{ secrets.GHCR_CLEANUP_TOKEN }}
+          token: ${{ secrets.GITOPS_TOKEN }}
