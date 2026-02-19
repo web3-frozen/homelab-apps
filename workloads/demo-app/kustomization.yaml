@@ -15,4 +15,4 @@ images:
   newTag: 07ac9e4
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
-  newTag: b75cc2a
+  newTag: 9183ce4
