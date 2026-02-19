@@ -70,6 +70,7 @@ permissions:
   contents: read
   packages: write
   security-events: write
+  actions: read
   id-token: write
 
 env:
@@ -202,7 +203,7 @@ jobs:
           exit-code: ${{ inputs.trivy-exit-code }}
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('trivy-results.sarif') != ''
         continue-on-error: true
         with:
