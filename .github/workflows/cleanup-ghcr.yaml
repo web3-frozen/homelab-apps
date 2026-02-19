@@ -1,0 +1,31 @@
+# Scheduled cleanup of old container images in GHCR.
+# Keeps the 20 most recent versions per package and removes the rest.
+name: Cleanup GHCR Images
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Every Sunday at 03:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      matrix:
+        package:
+          - demo-api
+          - demo-frontend
+          - defi-lending-api
+          - defi-lending-frontend
+          - onchain-monitor
+          - onchain-monitor-frontend
+    steps:
+      - name: Delete old versions of ${{ matrix.package }}
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ matrix.package }}
+          package-type: container
+          min-versions-to-keep: 20
+          delete-only-untagged-versions: false
