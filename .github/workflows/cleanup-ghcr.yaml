@@ -13,6 +13,7 @@ jobs:
     permissions:
       packages: write
     strategy:
+      fail-fast: false
       matrix:
         package:
           - demo-api
@@ -25,7 +26,9 @@ jobs:
       - name: Delete old versions of ${{ matrix.package }}
         uses: actions/delete-package-versions@v5
         with:
+          owner: web3-frozen
           package-name: ${{ matrix.package }}
           package-type: container
           min-versions-to-keep: 20
           delete-only-untagged-versions: false
+          token: ${{ secrets.GHCR_CLEANUP_TOKEN }}
