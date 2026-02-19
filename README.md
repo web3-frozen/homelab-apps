@@ -11,8 +11,9 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Monitoring App** | [Onchain Monitor](workloads/onchain-monitor/) | DeFi metrics monitoring with Telegram alerts (Go backend + Next.js frontend) |
 | **Service Mesh** | [Linkerd](https://linkerd.io/) | Lightweight mTLS, traffic metrics, golden signals |
 | **Secrets** | [External Secrets Operator](https://external-secrets.io/) + [Infisical](https://infisical.com/) | Secret management with self-hosted backend |
-| **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement |
+| **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement (**Enforce** mode) |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
+| **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
 | **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
@@ -41,8 +42,20 @@ homelab-apps/
     └── onchain-monitor/         # Onchain Monitor workload
         ├── kustomization.yaml
         ├── servicemonitor.yaml  # Prometheus scrape config
-        └── prometheusrules.yaml # Alert rules (app health + DB storage)
+        ├── prometheusrules.yaml # Alert rules (app health + DB storage)
+        └── network-policy.yaml  # Default-deny ingress + allow rules
 ```
+
+### Network Policies
+
+Each workload namespace has a `network-policy.yaml` with:
+- **Default deny ingress** — no traffic allowed unless explicitly permitted
+- **Allow same namespace** — pods within the same namespace can communicate
+- **Allow ingress controller** — traffic from kube-system (Traefik) is permitted
+- **Allow DNS egress** — pods can reach kube-dns for name resolution
+- **Allow external egress** — pods can reach external APIs
+
+Redis namespace additionally allows ingress from the `onchain-monitor` namespace only.
 
 ## Access URLs
 
@@ -84,5 +97,6 @@ User → Cloudflare (TLS) → Encrypted Tunnel → Traefik (HTTP:80)
 
 Pod-to-Pod: Linkerd mTLS sidecar proxy (automatic within meshed namespaces)
 Secrets: Infisical → External Secrets Operator → Kubernetes Secrets
-Policy: Kyverno audits all pods for security best practices
+Policy: Kyverno enforces security standards (privileged containers, resource limits, labels)
+Network: Default-deny ingress NetworkPolicies per workload namespace
 ```
