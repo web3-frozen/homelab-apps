@@ -69,10 +69,10 @@ spec:
               value: "redis://redis-master.redis.svc.cluster.local:6379/0"
           resources:
             requests:
-              cpu: 50m
+              cpu: 100m
               memory: 64Mi
             limits:
-              cpu: 250m
+              cpu: 500m
               memory: 256Mi
           livenessProbe:
             httpGet:
