@@ -16,4 +16,4 @@ images:
   newTag: cdb40a4
 - name: ghcr.io/web3-frozen/onchain-monitor-frontend
   newName: ghcr.io/web3-frozen/onchain-monitor-frontend
-  newTag: "6037124"
+  newTag: 7e3ca5d
