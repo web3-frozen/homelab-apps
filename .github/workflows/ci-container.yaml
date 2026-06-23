@@ -101,12 +101,12 @@ jobs:
           args: --timeout=5m
 
       - name: Go test
-        if: inputs.go-version != ''
-        run: go test -race -coverprofile=coverage.out ./...
-
-      - name: Go coverage report
-        if: inputs.go-version != ''
-        run: go tool cover -func=coverage.out
+        run: go test -race ./...
+      
+      - name: Go coverage
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
 
       # Node.js
       - name: Setup Node.js
