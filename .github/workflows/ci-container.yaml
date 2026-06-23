@@ -95,6 +95,8 @@ jobs:
 
       - name: Go lint
         if: inputs.go-version != ''
+        env:
+          GOTOOLCHAIN: go${{ inputs.go-version }}
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
