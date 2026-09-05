@@ -22,6 +22,8 @@ jobs:
           - defi-lending-frontend
           - onchain-monitor
           - onchain-monitor-frontend
+          - sitesight-infra
+          - sitesight-hk
     steps:
       - name: Delete old versions of ${{ matrix.package }}
         uses: actions/delete-package-versions@v5
