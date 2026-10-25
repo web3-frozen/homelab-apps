@@ -101,9 +101,11 @@ jobs:
           args: --timeout=5m
 
       - name: Go test
+        if: inputs.go-version != ''
         run: go test -race ./...
-      
+
       - name: Go coverage
+        if: inputs.go-version != ''
         run: |
           go test -coverprofile=coverage.out ./... || true
           go tool cover -func=coverage.out
