@@ -13,5 +13,6 @@
 - [x] Upgrade Beyla
 - [x] Upgrade cert-manager
 - [x] Upgrade kube-prometheus-stack
+- [x] Upgrade K3s-bundled Traefik runtime
 - [x] Upgrade Linkerd and rotate trust chain
 - [x] Final Argo, APM, logs, mTLS, and security verification
