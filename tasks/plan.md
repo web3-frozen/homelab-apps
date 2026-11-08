@@ -13,8 +13,8 @@ validated before GitOps rollout, and each component has a rollback point.
   since 2024 and no newer stable OSS chart is published.
 - Use cert-manager for Linkerd root and issuer lifecycle, with an overlap
   trust-anchor window instead of replacing the root in place.
-- Pin Trivy CLI and action versions to the latest released versions; do not use
-  floating `latest` at runtime.
+- Pin Trivy CLI `v0.76.2` and action `0.36.0`; do not use floating `latest` at
+  runtime.
 - Upgrade Helm releases in dependency order and verify Argo health after each
   checkpoint.
 
@@ -39,7 +39,7 @@ validated before GitOps rollout, and each component has a rollback point.
 - [x] Existing secrets and workloads remain healthy.
 
 ### Phase 3: Stateful and Policy Components
-- [x] Upgrade CloudNativePG and verify both PostgreSQL clusters.
+- [x] Upgrade CloudNativePG and verify all PostgreSQL clusters.
 - [x] Upgrade Kyverno and verify policy reports and admission.
 - [x] Upgrade Infisical and verify External Secrets sync.
 

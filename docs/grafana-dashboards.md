@@ -52,10 +52,20 @@ Use this for application health, data freshness, business metrics, and logs.
 | Beyla | Argo CD | `apps/beyla.yaml` |
 | datasources, dashboards, alerts | Argo CD | `platform/monitoring/` |
 | Grafana admin password | External Secrets Operator | Infisical `INFRA_GRAFANA_ADMIN_PASSWORD` |
+| Grafana OIDC client secret | External Secrets Operator | Infisical `INFRA_AUTHENTIK_GRAFANA_CLIENT_SECRET` |
 
 The Grafana Deployment is annotated for Reloader. After a credential rotation
 is synced into `monitoring/grafana-admin`, Reloader restarts Grafana so the new
 environment value takes effect.
+
+Grafana uses Authentik generic OAuth with the `grafana` client ID and the
+callback `https://grafana.<domain>/login/generic_oauth`. `server.root_url` must
+remain the public HTTPS URL, otherwise Grafana generates a `localhost:3000`
+callback that Authentik rejects.
+
+The home dashboard path is
+`/tmp/dashboards/Homelab/homelab-overview.json`. Do not drop the `Homelab`
+directory segment; the sidecar preserves `grafana_folder` in its file layout.
 
 The Helm chart default dashboards are disabled with
 `grafana.defaultDashboardsEnabled=false`. Leaving them enabled restores more

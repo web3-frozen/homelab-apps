@@ -1,5 +1,11 @@
 # Runbook: Monitoring Helm Ownership Migration
 
+> **Historical procedure - completed 2026-11-08.** The monitoring and Beyla
+> charts are already ArgoCD-managed and no longer exist in Pulumi state. Do not
+> rerun these state-delete commands. For any future ownership migration, use
+> the dependency-safe procedure in
+> `pulumi-k3s-proxmox/docs/runbooks/helm-ownership-migration-2026-11-09.md`.
+
 ## Context
 
 kube-prometheus-stack and Beyla were originally created by the Pulumi program.
@@ -8,9 +14,9 @@ They are now declared as Argo CD Applications:
 - `monitoring` uses `apps/monitoring.yaml`
 - `beyla` uses `apps/beyla.yaml`
 
-Argo CD adopts the existing Kubernetes resources by Server-Side Apply. Do not
-run `pulumi destroy` or disable Argo auto-sync while the Pulumi chart entries are
-still in state.
+Argo CD adopts the existing Kubernetes resources by Server-Side Apply. The
+state-delete commands below are retained as a historical record, not as a
+current runbook.
 
 ## Safe Migration Order
 

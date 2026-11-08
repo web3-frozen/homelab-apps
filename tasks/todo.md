@@ -2,7 +2,7 @@
 
 - [x] Capture baseline versions and health
 - [x] Install pinned Helm and Linkerd edge CLI
-- [x] Upgrade Trivy to latest CLI/action
+- [x] Pin Trivy CLI `v0.76.2` and action `0.36.0`
 - [x] Upgrade Reloader
 - [x] Upgrade Goldilocks
 - [x] Upgrade External Secrets

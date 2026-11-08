@@ -11,7 +11,10 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Monitoring App** | [Onchain Monitor](workloads/onchain-monitor/) | DeFi metrics monitoring with Telegram alerts (Go backend + Next.js frontend) |
 | **Service Mesh** | [Linkerd](https://linkerd.io/) | Lightweight mTLS, traffic metrics, golden signals |
 | **Secrets** | [External Secrets Operator](https://external-secrets.io/) + [Infisical](https://infisical.com/) | Secret management with self-hosted backend |
-| **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement (**Enforce** mode) |
+| **Identity / SSO** | [Authentik](https://goauthentik.io/) | OIDC identity provider for ArgoCD and Grafana with an admin IP allowlist |
+| **Policy** | [Kyverno](https://kyverno.io/) | Privileged-container and label checks enforced; resource-limit checks audited |
+| **TLS** | [cert-manager](https://cert-manager.io/) | Cloudflare DNS-01 automation and Let's Encrypt issuers |
+| **Storage** | [Longhorn](https://longhorn.io/) | Replicated persistent volumes with two default replicas |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
 | **Metrics** | Prometheus + Grafana | Three consolidated Grafana dashboards for cluster, APM, and Onchain Monitor |
@@ -32,6 +35,11 @@ homelab-apps/
 │   ├── linkerd.yaml             # Service mesh: CRDs + control plane + viz
 │   ├── external-secrets.yaml    # Secret operator
 │   ├── infisical.yaml           # Self-hosted secret manager
+│   ├── authentik.yaml           # SSO Helm chart
+│   ├── authentik-config.yaml    # PostgreSQL, secrets, blueprints, ingress
+│   ├── cert-manager.yaml        # Cloudflare DNS-01 certificate automation
+│   ├── cert-manager-config.yaml # ExternalSecret and ClusterIssuers
+│   ├── longhorn.yaml            # Replicated storage
 │   ├── kyverno.yaml             # Policy engine + policies
 │   ├── goldilocks.yaml          # Resource recommender + VPA
 │   ├── alloy.yaml               # Log collector (replaces Promtail)
@@ -42,6 +50,8 @@ homelab-apps/
 │   └── reloader.yaml            # ConfigMap/Secret watcher
 ├── platform/                    # Platform component manifests
 │   ├── linkerd/                 # Linkerd identity cert setup Job
+│   ├── authentik/               # Authentik database, OIDC blueprint, ingress
+│   ├── cert-manager/            # DNS-01 credentials and issuers
 │   ├── kyverno/                 # Kyverno cluster policies
 │   ├── actions-runner/          # Repository-scoped RunnerDeployment
 │   └── monitoring/              # Grafana datasources, 3 dashboards, alerting
@@ -116,9 +126,10 @@ ownership and troubleshooting.
 
 | Service | URL |
 |---------|-----|
-| Online Boutique | https://shop.&lt;your-domain&gt; |
-| ArgoCD | https://argocd.&lt;your-domain&gt; |
-| Grafana | https://grafana.&lt;your-domain&gt; |
+| Online Boutique | `https://shop.<your-domain>` |
+| ArgoCD | `https://argocd.<your-domain>` |
+| Grafana | `https://grafana.<your-domain>` |
+| Authentik | `https://auth.<your-domain>` |
 
 ## Adding a New App
 
@@ -151,10 +162,12 @@ GitHub → Actions Runner Controller → ephemeral self-hosted jobs
 User → Cloudflare (TLS) → Encrypted Tunnel → Traefik (HTTP:80)
                                                 ├── shop.<domain> → Online Boutique frontend
                                                 ├── argocd.<domain> → ArgoCD server
-                                                └── grafana.<domain> → Grafana dashboard
+                                                ├── grafana.<domain> → Grafana dashboard
+                                                └── auth.<domain> → Authentik (IP allowlisted)
 
 Pod-to-Pod: Linkerd mTLS sidecar proxy (automatic within meshed namespaces)
 Secrets: Infisical → External Secrets Operator → Kubernetes Secrets
+Identity: Authentik OIDC → ArgoCD and Grafana; ArgoCD local admin is break-glass
 Policy: Kyverno enforces security standards (privileged containers, resource limits, labels)
 Network: Default-deny ingress NetworkPolicies per workload namespace
 ```
@@ -166,3 +179,6 @@ Applications, not in the Pulumi program.
 Recovery procedures for the Kyverno migration-hook loop and the immutable
 Linkerd trust Job are documented in the
 [Pulumi repository runbook](https://github.com/web3-frozen/pulumi-k3s-proxmox/blob/main/docs/runbooks/argocd-sync-failures.md).
+
+Authentik login, allowlist, secret names, and OIDC recovery are documented in
+[`docs/runbooks/authentik-sso.md`](docs/runbooks/authentik-sso.md).
