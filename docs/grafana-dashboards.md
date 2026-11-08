@@ -50,6 +50,10 @@ Use this for application health, data freshness, business metrics, and logs.
 | datasources, dashboards, alerts | Argo CD | `platform/monitoring/` |
 | Grafana admin password | External Secrets Operator | Infisical `INFRA_GRAFANA_ADMIN_PASSWORD` |
 
+The Grafana Deployment is annotated for Reloader. After a credential rotation
+is synced into `monitoring/grafana-admin`, Reloader restarts Grafana so the new
+environment value takes effect.
+
 The Helm chart default dashboards are disabled with
 `grafana.defaultDashboardsEnabled=false`. Leaving them enabled restores more
 than 30 overlapping cluster dashboards and makes the three curated dashboards
