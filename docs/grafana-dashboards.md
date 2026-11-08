@@ -19,13 +19,16 @@ Use this as the first screen during an infrastructure incident. It shows:
 
 Use this to attribute latency to a frontend, backend, or third-party call.
 
-- server traffic, 5xx rate, and p95 latency by service
-- p95 latency split into frontend, backend, and third-party dependency calls
+- server traffic, 5xx rate, and P95/P99 latency by service
+- P95/P99 latency split into frontend, backend, and third-party dependency calls
 - slow server routes
 - slow upstream calls with caller-to-upstream attribution
-- third-party dependency error rate
-- onchain source polling latency
+- third-party dependency error rate with HTTP status attribution
+- onchain source polling P95/P99 latency
 - Tempo trace ingest rate
+
+The upstream error table includes the HTTP status. A `429` is a provider rate
+limit and should not be read as an application `5xx` failure.
 
 This dashboard is backed by Beyla eBPF metrics and Tempo traces. Applications do
 not need code changes to appear in the service metrics.
