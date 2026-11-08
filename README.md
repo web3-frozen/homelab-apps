@@ -16,6 +16,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
 | **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
+| **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
 | **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
@@ -34,10 +35,12 @@ homelab-apps/
 │   ├── alloy.yaml               # Log collector (replaces Promtail)
 │   ├── loki.yaml                # Log storage
 │   ├── tempo.yaml               # Trace storage (OTLP)
+│   ├── actions-runner.yaml      # ARC Helm chart + runner Application
 │   └── reloader.yaml            # ConfigMap/Secret watcher
 ├── platform/                    # Platform component manifests
 │   ├── linkerd/                 # Linkerd identity cert setup Job
 │   ├── kyverno/                 # Kyverno cluster policies
+│   ├── actions-runner/          # Repository-scoped RunnerDeployment
 │   └── monitoring/              # Grafana datasources, dashboards, alerting
 └── workloads/                   # Application workloads
     ├── online-boutique/         # Google Online Boutique manifests
@@ -108,6 +111,9 @@ kubectl label namespace <name> goldilocks.fairwinds.com/enabled=true
 ## Architecture
 
 ```
+GitHub → ArgoCD App of Apps → Helm charts and workload manifests
+GitHub → Actions Runner Controller → ephemeral self-hosted jobs
+
 User → Cloudflare (TLS) → Encrypted Tunnel → Traefik (HTTP:80)
                                                 ├── shop.<domain> → Online Boutique frontend
                                                 ├── argocd.<domain> → ArgoCD server
@@ -118,3 +124,11 @@ Secrets: Infisical → External Secrets Operator → Kubernetes Secrets
 Policy: Kyverno enforces security standards (privileged containers, resource limits, labels)
 Network: Default-deny ingress NetworkPolicies per workload namespace
 ```
+
+Pulumi only bootstraps the infrastructure and credentials required before
+ArgoCD is available. New platform Helm charts belong here as ArgoCD
+Applications, not in the Pulumi program.
+
+Recovery procedures for the Kyverno migration-hook loop and the immutable
+Linkerd trust Job are documented in the
+[Pulumi repository runbook](https://github.com/web3-frozen/pulumi-k3s-proxmox/blob/main/docs/runbooks/argocd-sync-failures.md).
