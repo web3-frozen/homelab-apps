@@ -110,6 +110,8 @@ kind: Service
 metadata:
   name: defi-lending-frontend
   namespace: defi-lending
+  labels:
+    app: defi-lending-frontend
 spec:
   selector:
     app: defi-lending-frontend

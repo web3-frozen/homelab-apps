@@ -6,6 +6,8 @@ resources:
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
+- network-policy.yaml
+- servicemonitor.yaml
 
 images:
 - name: ghcr.io/web3-frozen/defi-lending-api

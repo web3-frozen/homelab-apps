@@ -14,6 +14,8 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement (**Enforce** mode) |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
+| **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
+| **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
 | **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
@@ -29,11 +31,14 @@ homelab-apps/
 │   ├── infisical.yaml           # Self-hosted secret manager
 │   ├── kyverno.yaml             # Policy engine + policies
 │   ├── goldilocks.yaml          # Resource recommender + VPA
+│   ├── alloy.yaml               # Log collector (replaces Promtail)
+│   ├── loki.yaml                # Log storage
+│   ├── tempo.yaml               # Trace storage (OTLP)
 │   └── reloader.yaml            # ConfigMap/Secret watcher
 ├── platform/                    # Platform component manifests
 │   ├── linkerd/                 # Linkerd identity cert setup Job
 │   ├── kyverno/                 # Kyverno cluster policies
-│   └── monitoring/              # AlertManagerConfig (Telegram), Grafana dashboards
+│   └── monitoring/              # Grafana datasources, dashboards, alerting
 └── workloads/                   # Application workloads
     ├── online-boutique/         # Google Online Boutique manifests
     │   ├── namespace.yaml
@@ -56,6 +61,19 @@ Each workload namespace has a `network-policy.yaml` with:
 - **Allow external egress** — pods can reach external APIs
 
 Redis namespace additionally allows ingress from the `onchain-monitor` namespace only.
+
+## APM
+
+The `APM — Service and Dependency Latency` Grafana dashboard answers:
+
+- Which service or route has slow p95/p99 latency?
+- Which outbound dependency is slow?
+- Which onchain data source is slow or failing?
+- Which individual request was slow, via Tempo traces?
+
+Prometheus supplies RED metrics and dependency latency. Tempo stores 10% sampled
+traces exported by Beyla. Alloy reads local pod logs and links logs to traces in
+Grafana through the `trace_id` derived field.
 
 ## Access URLs
 

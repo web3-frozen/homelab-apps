@@ -1,0 +1,86 @@
+# Grafana Alloy — replaces the end-of-life Promtail log collector.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: "1.15.0"
+    helm:
+      valuesObject:
+        fullnameOverride: alloy
+        controller:
+          type: daemonset
+        rbac:
+          create: false
+        serviceAccount:
+          automount: false
+        service:
+          enabled: false
+        serviceMonitor:
+          enabled: false
+        alloy:
+          configMap:
+            create: true
+            content: |-
+              loki.process "retention_filter" {
+                stage.regex {
+                  source     = "filename"
+                  expression = "/var/log/pods/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_(?P<uid>[^/]+)/(?P<container>[^/]+)/.*\\.log"
+                }
+                stage.drop {
+                  older_than          = "10m"
+                  drop_counter_reason = "too_old"
+                }
+
+                forward_to = [loki.write.default.receiver]
+              }
+
+              loki.source.file "pods" {
+                targets = [{
+                  __path__ = "/var/log/pods/*/*/*.log",
+                }]
+                forward_to = [loki.process.retention_filter.receiver]
+              }
+
+              loki.write "default" {
+                endpoint {
+                  url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+                }
+              }
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+            runAsGroup: 0
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - DAC_READ_SEARCH
+            seccompProfile:
+              type: RuntimeDefault
+          mounts:
+            varlog: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

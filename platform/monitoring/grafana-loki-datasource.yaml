@@ -14,6 +14,7 @@ data:
     apiVersion: 1
     datasources:
       - name: Loki
+        uid: loki
         type: loki
         access: proxy
         url: http://loki.monitoring.svc.cluster.local:3100
@@ -21,7 +22,7 @@ data:
         jsonData:
           maxLines: 1000
           derivedFields:
-            - datasourceUid: prometheus
+            - datasourceUid: tempo
               matcherRegex: '"trace_id":"(\w+)"'
               name: TraceID
-              url: ""
+              url: "$${__value.raw}"
