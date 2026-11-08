@@ -34,6 +34,7 @@ spec:
         app: defi-lending-api
       annotations:
         linkerd.io/inject: enabled
+        homelab.dev/rollout-check: "2026-11-08"
     spec:
       serviceAccountName: defi-lending-api
       securityContext:
