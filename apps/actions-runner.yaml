@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actions-runner-controller
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    repoURL: https://actions-runner-controller.github.io/actions-runner-controller
+    chart: actions-runner-controller
+    targetRevision: "0.23.7"
+    helm:
+      valuesObject:
+        authSecret:
+          enabled: true
+          create: false
+          name: controller-manager
+        certManagerEnabled: true
+        image:
+          actionsRunnerRepositoryAndTag: summerwind/actions-runner:v2.338.2-ubuntu-24.04
+          dindSidecarRepositoryAndTag: docker:29.9.3-dind
+        scope:
+          singleNamespace: true
+          watchNamespace: actions-runner-system
+        metrics:
+          serviceMonitor:
+            enable: true
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: actions-runner
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/web3-frozen/homelab-apps.git
+    targetRevision: main
+    path: platform/actions-runner
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
