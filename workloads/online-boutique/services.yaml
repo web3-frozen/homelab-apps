@@ -229,8 +229,6 @@ metadata:
   name: redis-cart
   labels:
     app: redis-cart
-  annotations:
-    config.linkerd.io/opaque-ports: "6379"
 spec:
   selector:
     matchLabels:
@@ -284,6 +282,8 @@ metadata:
   name: redis-cart
   labels:
     app: redis-cart
+  annotations:
+    config.linkerd.io/opaque-ports: "6379"
 spec:
   type: ClusterIP
   selector:
