@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.linkerd.io/stable
+    repoURL: https://helm.linkerd.io/edge
     chart: linkerd-crds
-    targetRevision: "1.8.0"
+    targetRevision: "2026.11.1"
     helm:
       valuesObject:
         installGatewayAPI: false
@@ -71,9 +71,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.linkerd.io/stable
+    repoURL: https://helm.linkerd.io/edge
     chart: linkerd-control-plane
-    targetRevision: "1.16.11"
+    targetRevision: "2026.11.1"
     helm:
       valuesObject:
         identity:
@@ -104,9 +104,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.linkerd.io/stable
+    repoURL: https://helm.linkerd.io/edge
     chart: linkerd-viz
-    targetRevision: "30.12.11"
+    targetRevision: "2026.11.1"
     helm:
       valuesObject:
         dashboard:
