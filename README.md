@@ -14,6 +14,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Policy** | [Kyverno](https://kyverno.io/) | Pod security, resource limits, label enforcement (**Enforce** mode) |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
+| **Metrics** | Prometheus + Grafana | Three consolidated Grafana dashboards for cluster, APM, and Onchain Monitor |
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
 | **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
@@ -43,7 +44,7 @@ homelab-apps/
 │   ├── linkerd/                 # Linkerd identity cert setup Job
 │   ├── kyverno/                 # Kyverno cluster policies
 │   ├── actions-runner/          # Repository-scoped RunnerDeployment
-│   └── monitoring/              # Grafana datasources, dashboards, alerting
+│   └── monitoring/              # Grafana datasources, 3 dashboards, alerting
 └── workloads/                   # Application workloads
     ├── online-boutique/         # Google Online Boutique manifests
     │   ├── namespace.yaml
@@ -67,9 +68,32 @@ Each workload namespace has a `network-policy.yaml` with:
 
 Redis namespace additionally allows ingress from the `onchain-monitor` namespace only.
 
+## Grafana
+
+Grafana intentionally exposes three dashboards:
+
+| Dashboard | Questions it answers |
+|-----------|----------------------|
+| **Homelab - Overview** | Are nodes and pods healthy? What is consuming CPU, memory, or disk? Which workloads are restarting, throttled, or missing replicas? |
+| **APM - Request and Dependency Latency** | Is the frontend, backend, or a third-party dependency slow? Which service, route, or upstream call has high p95 latency? |
+| **Onchain Monitor** | Is polling fresh? Which data source is failing or slow? Are alerts being delivered? What do recent logs show? |
+
+The kube-prometheus-stack default dashboards are disabled in
+`apps/monitoring.yaml`. Do not enable them again without removing or replacing
+the consolidated dashboards; the chart otherwise adds more than 30 overlapping
+dashboards to Grafana.
+
+Dashboard source lives in `platform/monitoring/*.json` and is rendered by the
+`monitoring-config` Argo CD Application. Grafana UI edits are disabled by the
+sidecar provider. Change the JSON in Git, not the UI.
+
+Grafana admin credentials are stored in Infisical as
+`INFRA_GRAFANA_ADMIN_PASSWORD` and synced to the `monitoring/grafana-admin`
+Secret by External Secrets Operator.
+
 ## APM
 
-The `APM — Service and Dependency Latency` Grafana dashboard answers:
+The APM dashboard answers:
 
 - Which service or route has slow p95/p99 latency?
 - Which outbound dependency is slow?
@@ -79,6 +103,9 @@ The `APM — Service and Dependency Latency` Grafana dashboard answers:
 Prometheus supplies RED metrics and dependency latency. Tempo stores 10% sampled
 traces exported by Beyla. Alloy reads local pod logs and links logs to traces in
 Grafana through the `trace_id` derived field.
+
+See [`docs/grafana-dashboards.md`](docs/grafana-dashboards.md) for dashboard
+ownership and troubleshooting.
 
 ## Access URLs
 
