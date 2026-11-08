@@ -1,0 +1,168 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: renovate-credentials
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/web3-frozen/homelab-apps.git
+    targetRevision: main
+    path: platform/renovate
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: renovate
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: renovate
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "12"
+spec:
+  project: default
+  source:
+    repoURL: https://docs.renovatebot.com/helm-charts
+    chart: renovate
+    targetRevision: "46.417.3"
+    helm:
+      valuesObject:
+        fullnameOverride: renovate
+        cronjob:
+          schedule: "0 2 * * *"
+          timeZone: Asia/Hong_Kong
+          concurrencyPolicy: Forbid
+          jobBackoffLimit: 1
+          successfulJobsHistoryLimit: 3
+          failedJobsHistoryLimit: 3
+          activeDeadlineSeconds: 3600
+          preCommand: |
+            export RENOVATE_TOKEN="$(cat /var/run/renovate-token/token)"
+          initContainers:
+            - name: github-app-installation-token
+              image: ghcr.io/mshekow/github-app-installation-token:latest@sha256:c48989a7e2e0456f6b3bb968e32f8803ee08558bc988e9d95b358ee1a5358262
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  node index.js \
+                    "$RENOVATE_APP_ID" \
+                    "$RENOVATE_INSTALLATION_ID" \
+                    /var/run/renovate-app-key/app.pem \
+                    https://api.github.com > /var/run/renovate-token/token
+              env:
+                - name: RENOVATE_APP_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-credentials
+                      key: app-id
+                - name: RENOVATE_INSTALLATION_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-credentials
+                      key: installation-id
+              volumeMounts:
+                - name: renovate-app-key
+                  mountPath: /var/run/renovate-app-key
+                  readOnly: true
+                - name: renovate-token
+                  mountPath: /var/run/renovate-token
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                capabilities:
+                  drop: ["ALL"]
+        renovate:
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          config: |
+            {
+              "platform": "github",
+              "endpoint": "https://api.github.com/",
+              "autodiscover": false,
+              "repositories": [
+                "web3-frozen/homelab-apps",
+                "web3-frozen/pulumi-k3s-proxmox",
+                "web3-frozen/demo-api",
+                "web3-frozen/demo-frontend",
+                "web3-frozen/onchain-monitor",
+                "web3-frozen/onchain-monitor-frontend",
+                "web3-frozen/defi-lending-api",
+                "web3-frozen/defi-lending-frontend"
+              ],
+              "dependencyDashboard": true,
+              "automerge": false,
+              "prConcurrentLimit": 5,
+              "prHourlyLimit": 2,
+              "rangeStrategy": "bump",
+              "rebaseWhen": "conflicted",
+              "packageRules": [
+                {
+                  "matchUpdateTypes": ["minor", "patch"],
+                  "groupName": "non-major dependencies"
+                },
+                {
+                  "matchUpdateTypes": ["major"],
+                  "dependencyDashboardApproval": true
+                }
+              ]
+            }
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        extraVolumes:
+          - name: renovate-app-key
+            secret:
+              secretName: renovate-credentials
+              items:
+                - key: private-key
+                  path: app.pem
+          - name: renovate-token
+            emptyDir: {}
+          - name: tmp
+            emptyDir: {}
+        extraVolumeMounts:
+          - name: renovate-token
+            mountPath: /var/run/renovate-token
+            readOnly: true
+          - name: tmp
+            mountPath: /tmp
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: renovate
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
