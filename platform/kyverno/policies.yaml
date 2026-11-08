@@ -107,8 +107,11 @@ spec:
                 - argocd
                 - monitoring
       validate:
-        message: "The label 'app' is required."
-        pattern:
-          metadata:
-            labels:
-              app: "?*"
+        message: "Either 'app' or 'app.kubernetes.io/name' is required."
+        anyPattern:
+          - metadata:
+              labels:
+                app: "?*"
+          - metadata:
+              labels:
+                app.kubernetes.io/name: "?*"
