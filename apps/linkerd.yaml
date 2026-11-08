@@ -52,6 +52,12 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: linkerd
+  ignoreDifferences:
+    - group: batch
+      kind: Job
+      jqPathExpressions:
+        - .metadata.labels
+        - .spec.template.metadata.labels
   syncPolicy:
     automated:
       prune: true
