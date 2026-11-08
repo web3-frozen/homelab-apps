@@ -44,6 +44,10 @@ spec:
       jqPathExpressions:
         - .metadata.labels
         - .metadata.annotations
+    - group: flowcontrol.apiserver.k8s.io
+      kind: FlowSchema
+      jqPathExpressions:
+        - .spec.matchingPrecedence
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
