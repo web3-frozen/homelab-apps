@@ -79,9 +79,9 @@ spec:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending",http_response_status_code=~"5.."}[2m]))
+            (sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending",http_response_status_code=~"5.."}[2m])) or vector(0))
             /
-            clamp_min(sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending"}[2m])), 0.000001)
+            clamp_min((sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending"}[2m])) or vector(0)), 0.000001)
     - name: p95-latency
       interval: 30s
       count: 4
@@ -94,4 +94,4 @@ spec:
             histogram_quantile(
               0.95,
               sum(rate(http_server_request_duration_seconds_bucket{k8s_namespace_name="defi-lending"}[2m])) by (le)
-            )
+            ) or vector(0)
