@@ -30,6 +30,7 @@ spec:
                 - cnpg-system
                 - infisical
                 - kyverno
+                - actions-runner-system
       validate:
         message: "Privileged mode is disallowed."
         pattern:
@@ -68,6 +69,7 @@ spec:
                 - monitoring
                 - linkerd
                 - linkerd-viz
+                - actions-runner-system
       validate:
         message: "CPU and memory limits are required."
         pattern:
