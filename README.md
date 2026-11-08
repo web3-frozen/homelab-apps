@@ -75,7 +75,7 @@ Grafana intentionally exposes three dashboards:
 | Dashboard | Questions it answers |
 |-----------|----------------------|
 | **Homelab - Overview** | Are nodes and pods healthy? What is consuming CPU, memory, or disk? Which workloads are restarting, throttled, or missing replicas? |
-| **APM - Request and Dependency Latency** | Is the frontend, backend, or a third-party dependency slow? Which service, route, or upstream call has high p95 latency? |
+| **APM - Request and Dependency Latency** | Is the frontend, backend, or a third-party dependency slow? Which service, route, or upstream call has high p95 or p99 latency? |
 | **Onchain Monitor** | Is polling fresh? Which data source is failing or slow? Are alerts being delivered? What do recent logs show? |
 
 The kube-prometheus-stack default dashboards are disabled in
@@ -104,6 +104,10 @@ The APM dashboard answers:
 Prometheus supplies RED metrics and dependency latency. Tempo stores 10% sampled
 traces exported by Beyla. Alloy reads local pod logs and links logs to traces in
 Grafana through the `trace_id` derived field.
+
+The APM dashboard reports P95 and P99 side by side. The upstream error table
+keeps the HTTP status code so rate limits such as `429` are not confused with
+application `5xx` failures.
 
 See [`docs/grafana-dashboards.md`](docs/grafana-dashboards.md) for dashboard
 ownership and troubleshooting.
