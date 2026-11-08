@@ -1,0 +1,58 @@
+# Longhorn is GitOps-managed after the ArgoCD bootstrap.
+# Pulumi keeps the namespace and the destroy-time finalizer cleanup Job.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: "1.7.2"
+    helm:
+      releaseName: longhorn
+      valuesObject:
+        defaultSettings:
+          defaultReplicaCount: 2
+          defaultDataPath: /var/lib/longhorn
+          guaranteedInstanceManagerCPU: 12
+          deletingConfirmationFlag: true
+        csi:
+          kubeletRootDir: /var/lib/kubelet
+        persistence:
+          defaultClass: true
+          defaultClassReplicaCount: 2
+        longhornUI:
+          replicas: 1
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
