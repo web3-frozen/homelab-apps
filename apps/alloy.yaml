@@ -30,20 +30,17 @@ spec:
           configMap:
             create: true
             content: |-
-              loki.process "retention_filter" {
-                stage.regex {
-                  source     = "filename"
-                  expression = "/var/log/pods/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_(?P<uid>[^/]+)/(?P<container>[^/]+)/.*\\.log"
-                }
-                forward_to = [loki.write.default.receiver]
-              }
-
               loki.source.file "pods" {
-                targets = [{
-                  __path__ = "/var/log/pods/*/*/*.log",
-                }]
+                targets = [
+                  { __path__ = "/var/log/pods/onchain-monitor_*/*/*.log", namespace = "onchain-monitor" },
+                  { __path__ = "/var/log/pods/demo-app_*/*/*.log", namespace = "demo-app" },
+                  { __path__ = "/var/log/pods/defi-lending_*/*/*.log", namespace = "defi-lending" },
+                  { __path__ = "/var/log/pods/online-boutique_*/*/*.log", namespace = "online-boutique" },
+                  { __path__ = "/var/log/pods/redis_*/*/*.log", namespace = "redis" },
+                  { __path__ = "/var/log/pods/monitoring_*/*/*.log", namespace = "monitoring" },
+                ]
                 tail_from_end = true
-                forward_to = [loki.process.retention_filter.receiver]
+                forward_to = [loki.write.default.receiver]
                 file_match {
                   enabled     = true
                   sync_period = "10s"
