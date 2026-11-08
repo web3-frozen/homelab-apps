@@ -17,8 +17,9 @@ spec:
         # The chart's post-upgrade migration hook is not idempotent under
         # ArgoCD: it creates cluster-scoped hook resources and fails on retry.
         # Run migration explicitly before a future Kyverno major upgrade.
-        migration:
-          enabled: false
+        crds:
+          migration:
+            enabled: false
         admissionController:
           replicas: 2
           apiPriorityAndFairness: true
