@@ -47,7 +47,7 @@ spec:
     - group: flowcontrol.apiserver.k8s.io
       kind: FlowSchema
       jqPathExpressions:
-        - .spec.matchingPrecedence
+        - .spec
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
