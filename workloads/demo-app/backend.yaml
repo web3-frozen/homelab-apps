@@ -29,6 +29,10 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: demo-api
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: demo-api
           image: ghcr.io/web3-frozen/demo-api

@@ -59,6 +59,9 @@ spec:
   template:
     spec:
       serviceAccountName: linkerd-identity-setup
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       restartPolicy: OnFailure
       containers:
         - name: setup
@@ -112,3 +115,7 @@ spec:
                 --cert=/tmp/issuer.crt --key=/tmp/issuer.key --dry-run=client -o yaml | kubectl apply -f -
 
               echo "Certificates generated and stored successfully."
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

@@ -29,6 +29,10 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: onchain-monitor-frontend
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       imagePullSecrets:
         - name: ghcr-pull-secret
       containers:

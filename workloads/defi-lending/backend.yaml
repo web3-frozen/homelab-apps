@@ -22,6 +22,10 @@ spec:
         linkerd.io/inject: enabled
     spec:
       serviceAccountName: defi-lending-api
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: defi-lending-api
           image: ghcr.io/web3-frozen/defi-lending-api
