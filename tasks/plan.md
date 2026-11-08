@@ -21,25 +21,25 @@ validated before GitOps rollout, and each component has a rollback point.
 ## Task List
 
 ### Phase 1: Baseline and Tools
-- [ ] Capture Helm releases, Argo app health, node health, and current image tags.
-- [ ] Install pinned Helm and Linkerd edge CLI binaries with checksum verification.
-- [ ] Update Trivy CLI/action to the newest releases.
+- [x] Capture Helm releases, Argo app health, node health, and current image tags.
+- [x] Install pinned Helm and Linkerd edge CLI binaries with checksum verification.
+- [x] Update Trivy CLI/action to the newest releases.
 
 ### Checkpoint: Baseline
-- [ ] Rollback commands and current versions are recorded.
-- [ ] Rendering tools match the target releases.
+- [x] Rollback commands and current versions are recorded.
+- [x] Rendering tools match the target releases.
 
 ### Phase 2: Low-risk Charts
-- [ ] Upgrade Reloader.
-- [ ] Upgrade Goldilocks.
-- [ ] Upgrade External Secrets.
+- [x] Upgrade Reloader.
+- [x] Upgrade Goldilocks.
+- [x] Upgrade External Secrets.
 
 ### Checkpoint: Low-risk Charts
-- [ ] All affected Apps are Synced/Healthy.
-- [ ] Existing secrets and workloads remain healthy.
+- [x] All affected Apps are Synced/Healthy.
+- [x] Existing secrets and workloads remain healthy.
 
 ### Phase 3: Stateful and Policy Components
-- [ ] Upgrade CloudNativePG and verify both PostgreSQL clusters.
+- [x] Upgrade CloudNativePG and verify both PostgreSQL clusters.
 - [ ] Upgrade Kyverno and verify policy reports and admission.
 - [ ] Upgrade Infisical and verify External Secrets sync.
 

@@ -3,10 +3,10 @@
 - [x] Capture baseline versions and health
 - [x] Install pinned Helm and Linkerd edge CLI
 - [x] Upgrade Trivy to latest CLI/action
-- [ ] Upgrade Reloader
-- [ ] Upgrade Goldilocks
-- [ ] Upgrade External Secrets
-- [ ] Upgrade CloudNativePG
+- [x] Upgrade Reloader
+- [x] Upgrade Goldilocks
+- [x] Upgrade External Secrets
+- [x] Upgrade CloudNativePG
 - [ ] Upgrade Kyverno
 - [ ] Upgrade Infisical
 - [ ] Upgrade Loki
