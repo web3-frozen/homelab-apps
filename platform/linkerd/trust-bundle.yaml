@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: linkerd-trust-bundle-overlap
+  name: linkerd-trust-bundle
   namespace: linkerd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -9,7 +9,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: linkerd-trust-bundle-overlap
+  name: linkerd-trust-bundle
   namespace: linkerd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -18,34 +18,36 @@ rules:
     resources: ["secrets"]
     resourceNames:
       - linkerd-trust-anchor-v2
-      - linkerd-identity-issuer-v2
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
   - apiGroups: [""]
     resources: ["configmaps"]
     resourceNames:
       - linkerd-identity-trust-roots
-    verbs: ["get", "patch"]
+    verbs: ["get", "patch", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: linkerd-trust-bundle-overlap
+  name: linkerd-trust-bundle
   namespace: linkerd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 subjects:
   - kind: ServiceAccount
-    name: linkerd-trust-bundle-overlap
+    name: linkerd-trust-bundle
     namespace: linkerd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: linkerd-trust-bundle-overlap
+  name: linkerd-trust-bundle
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: linkerd-trust-bundle-overlap
+  name: linkerd-trust-bundle-v2
   namespace: linkerd
   annotations:
     argocd.argoproj.io/sync-wave: "2"
@@ -56,15 +58,15 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: linkerd-trust-bundle-overlap
+        app.kubernetes.io/name: linkerd-trust-bundle
     spec:
-      serviceAccountName: linkerd-trust-bundle-overlap
+      serviceAccountName: linkerd-trust-bundle
       restartPolicy: OnFailure
       securityContext:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: overlap
+        - name: bundle
           image: alpine:3.23
           command:
             - /bin/sh
@@ -81,31 +83,24 @@ spec:
               chmod +x kubectl && mv kubectl /usr/local/bin/
 
               for attempt in $(seq 1 60); do
-                if kubectl get secret linkerd-trust-anchor-v2 -n linkerd >/dev/null 2>&1 &&
-                   kubectl get secret linkerd-identity-issuer-v2 -n linkerd >/dev/null 2>&1; then
+                if kubectl get secret linkerd-trust-anchor-v2 -n linkerd >/dev/null 2>&1; then
                   break
                 fi
                 if [ "$attempt" = 60 ]; then
-                  echo "Timed out waiting for cert-manager Linkerd certificates."
+                  echo "Timed out waiting for the v2 Linkerd trust anchor."
                   exit 1
                 fi
                 sleep 5
               done
 
-              kubectl get configmap linkerd-identity-trust-roots -n linkerd \
-                -o jsonpath='{.data.ca-bundle\.crt}' > /tmp/existing-roots.crt
               kubectl get secret linkerd-trust-anchor-v2 -n linkerd \
-                -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/new-root.crt
-
-              cp /tmp/existing-roots.crt /tmp/overlap-roots.crt
-              printf '\n' >> /tmp/overlap-roots.crt
-              cat /tmp/new-root.crt >> /tmp/overlap-roots.crt
+                -o jsonpath='{.data.tls\.crt}' | base64 -d > /tmp/trust-roots.crt
 
               kubectl create configmap linkerd-identity-trust-roots -n linkerd \
-                --from-file=ca-bundle.crt=/tmp/overlap-roots.crt \
+                --from-file=ca-bundle.crt=/tmp/trust-roots.crt \
                 --dry-run=client -o yaml | kubectl apply -f -
 
-              echo "Added the v2 root to the Linkerd overlap trust bundle."
+              echo "Configured Linkerd trust roots from cert-manager v2."
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
