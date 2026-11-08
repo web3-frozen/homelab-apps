@@ -47,6 +47,7 @@ spec:
                 targets = [{
                   __path__ = "/var/log/pods/*/*/*.log",
                 }]
+                tail_from_end = true
                 forward_to = [loki.process.retention_filter.receiver]
               }
 
