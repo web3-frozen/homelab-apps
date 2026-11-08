@@ -59,7 +59,7 @@ spec:
             analytics:
               check_for_updates: false
             dashboards:
-              default_home_dashboard_path: /tmp/dashboards/homelab-overview.json
+              default_home_dashboard_path: /tmp/dashboards/Homelab/homelab-overview.json
             server:
               root_url: https://grafana.dummysui.monster
             auth.generic_oauth:
