@@ -17,6 +17,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
 | **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
+| **Dependencies** | [Renovate](https://docs.renovatebot.com/) | Daily GitHub App-authenticated dependency updates with automerge disabled |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
 | **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
@@ -36,6 +37,7 @@ homelab-apps/
 │   ├── loki.yaml                # Log storage
 │   ├── tempo.yaml               # Trace storage (OTLP)
 │   ├── actions-runner.yaml      # ARC Helm chart + runner Application
+│   ├── renovate.yaml            # Renovate credentials + CronJob Applications
 │   └── reloader.yaml            # ConfigMap/Secret watcher
 ├── platform/                    # Platform component manifests
 │   ├── linkerd/                 # Linkerd identity cert setup Job
