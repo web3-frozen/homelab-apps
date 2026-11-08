@@ -26,11 +26,18 @@ spec:
                 - kube-system
                 - linkerd
                 - linkerd-viz
+                - longhorn-system
+                - cnpg-system
+                - infisical
+                - kyverno
       validate:
         message: "Privileged mode is disallowed."
         pattern:
           spec:
             containers:
+              - =(securityContext):
+                  =(privileged): "false"
+            =(initContainers):
               - =(securityContext):
                   =(privileged): "false"
 ---

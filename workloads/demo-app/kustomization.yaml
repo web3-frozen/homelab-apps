@@ -8,6 +8,7 @@ resources:
 - frontend.yaml
 - ingress.yaml
 - external-secret.yaml
+- network-policy.yaml
 
 images:
 - name: ghcr.io/web3-frozen/demo-api

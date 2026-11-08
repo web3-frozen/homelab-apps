@@ -62,21 +62,27 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: setup
-          image: alpine:3.21
+          image: alpine:3.23
           command:
             - /bin/sh
             - -c
             - |
               set -eu
-              apk add --no-cache openssl curl >/dev/null 2>&1
+              apk add --no-cache ca-certificates openssl curl >/dev/null 2>&1
 
-              # Install kubectl
-              curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')/kubectl"
+              # Install a fixed kubectl version and verify its published checksum.
+              KUBECTL_VERSION="v1.34.5"
+              ARCH="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+              curl -fsSLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl"
+              curl -fsSLO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${ARCH}/kubectl.sha256"
+              echo "$(cat kubectl.sha256)  kubectl" | sha256sum -c -
               chmod +x kubectl && mv kubectl /usr/local/bin/
 
-              # Check if trust anchor already exists
-              if kubectl get secret linkerd-identity-trust-roots -n linkerd 2>/dev/null; then
-                echo "Trust anchor already exists, skipping generation."
+              # Never replace an existing root CA. Rotating the trust anchor
+              # requires an overlap window and a controlled mesh rollout.
+              if kubectl get configmap linkerd-identity-trust-roots -n linkerd >/dev/null 2>&1 &&
+                 kubectl get secret linkerd-identity-issuer -n linkerd >/dev/null 2>&1; then
+                echo "Linkerd trust anchor and identity issuer already exist; skipping generation."
                 exit 0
               fi
 
