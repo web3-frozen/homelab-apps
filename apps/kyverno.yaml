@@ -15,7 +15,18 @@ spec:
       valuesObject:
         replicaCount: 1
         admissionController:
-          replicas: 1
+          replicas: 2
+          apiPriorityAndFairness: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+          livenessProbe:
+            timeoutSeconds: 10
+          readinessProbe:
+            timeoutSeconds: 10
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
