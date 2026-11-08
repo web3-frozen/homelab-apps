@@ -1,0 +1,64 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-selfsigned
+  namespace: linkerd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-trust-anchor-v2
+  namespace: linkerd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  secretName: linkerd-trust-anchor-v2
+  commonName: root.linkerd.cluster.local
+  isCA: true
+  duration: 87600h
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  issuerRef:
+    name: linkerd-selfsigned
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-trust-anchor-v2
+  namespace: linkerd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  ca:
+    secretName: linkerd-trust-anchor-v2
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-identity-issuer-v2
+  namespace: linkerd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  secretName: linkerd-identity-issuer-v2
+  commonName: identity.linkerd.cluster.local
+  dnsNames:
+    - identity.linkerd.cluster.local
+  isCA: true
+  duration: 8760h
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  issuerRef:
+    name: linkerd-trust-anchor-v2
+    kind: Issuer
