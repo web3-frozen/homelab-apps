@@ -9,7 +9,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "6"
 spec:
   project: default
   source:
@@ -43,6 +43,11 @@ spec:
             limits:
               cpu: 300m
               memory: 512Mi
+          envValueFrom:
+            GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+              secretKeyRef:
+                name: grafana-oidc
+                key: client-secret
           sidecar:
             dashboards:
               enabled: true
@@ -55,6 +60,18 @@ spec:
               check_for_updates: false
             dashboards:
               default_home_dashboard_path: /tmp/dashboards/homelab-overview.json
+            auth.generic_oauth:
+              enabled: true
+              name: Authentik
+              allow_sign_up: true
+              client_id: grafana
+              scopes: openid profile email
+              auth_url: https://auth.dummysui.monster/application/o/authorize/
+              token_url: https://auth.dummysui.monster/application/o/token/
+              api_url: https://auth.dummysui.monster/application/o/userinfo/
+              role_attribute_path: contains(groups[*], 'homelab-admins') && 'Admin' || 'Viewer'
+              role_attribute_strict: false
+              use_pkce: true
         prometheus:
           prometheusSpec:
             retention: 15d

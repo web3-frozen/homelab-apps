@@ -5,6 +5,7 @@ resources:
   - alertmanager-config.yaml
   - alertmanager-telegram-externalsecret.yaml
   - grafana-admin-externalsecret.yaml
+  - grafana-oidc-externalsecret.yaml
   - grafana-loki-datasource.yaml
   - grafana-tempo-datasource.yaml
 

@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprints
+  namespace: authentik
+data:
+  homelab-sso.yaml: |
+    version: 1
+    metadata:
+      name: Homelab SSO
+    entries:
+      - model: authentik_core.group
+        id: homelab-admins
+        identifiers:
+          name: homelab-admins
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, akadmin]]
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: argocd-provider
+        identifiers:
+          name: argocd
+        attrs:
+          client_type: confidential
+          client_id: argocd
+          client_secret: !Env AUTHENTIK_ARGOCD_CLIENT_SECRET
+          authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          grant_types:
+            - authorization_code
+            - refresh_token
+          include_claims_in_id_token: true
+          issuer_mode: per_provider
+          sub_mode: hashed_user_id
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+          redirect_uris:
+            - matching_mode: strict
+              url: https://argocd.dummysui.monster/auth/callback
+              redirect_uri_type: authorization
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+
+      - model: authentik_core.application
+        id: argocd-application
+        identifiers:
+          slug: argocd
+        attrs:
+          name: Argo CD
+          provider: !KeyOf argocd-provider
+          meta_launch_url: https://argocd.dummysui.monster/
+          meta_description: GitOps deployment and cluster management
+          meta_publisher: Homelab
+          open_in_new_tab: true
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: grafana-provider
+        identifiers:
+          name: grafana
+        attrs:
+          client_type: confidential
+          client_id: grafana
+          client_secret: !Env AUTHENTIK_GRAFANA_CLIENT_SECRET
+          authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          grant_types:
+            - authorization_code
+            - refresh_token
+          include_claims_in_id_token: true
+          issuer_mode: per_provider
+          sub_mode: hashed_user_id
+          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
+          redirect_uris:
+            - matching_mode: strict
+              url: https://grafana.dummysui.monster/login/generic_oauth
+              redirect_uri_type: authorization
+          property_mappings:
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+
+      - model: authentik_core.application
+        id: grafana-application
+        identifiers:
+          slug: grafana
+        attrs:
+          name: Grafana
+          provider: !KeyOf grafana-provider
+          meta_launch_url: https://grafana.dummysui.monster/
+          meta_description: Metrics, logs, traces, and dashboards
+          meta_publisher: Homelab
+          open_in_new_tab: true

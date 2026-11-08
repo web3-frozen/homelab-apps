@@ -1,0 +1,93 @@
+# Authentik identity provider. PostgreSQL is managed separately by CloudNativePG.
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.goauthentik.io
+    chart: authentik
+    targetRevision: "2026.8.5"
+    helm:
+      releaseName: authentik
+      valuesObject:
+        global:
+          additionalLabels:
+            app: authentik
+          image:
+            pullPolicy: IfNotPresent
+        authentik:
+          enabled: true
+          existingSecret:
+            secretName: authentik-config
+          error_reporting:
+            enabled: false
+          postgresql:
+            host: authentik-db-rw.authentik.svc.cluster.local
+            name: authentik
+            user: authentik
+            port: 5432
+        blueprints:
+          configMaps:
+            - authentik-blueprints
+        postgresql:
+          enabled: false
+        server:
+          replicas: 1
+          deploymentAnnotations:
+            reloader.stakater.com/auto: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          service:
+            type: ClusterIP
+            servicePortHttp: 80
+          ingress:
+            enabled: false
+          metrics:
+            serviceMonitor:
+              enabled: true
+              interval: 30s
+        worker:
+          replicas: 1
+          deploymentAnnotations:
+            reloader.stakater.com/auto: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          metrics:
+            serviceMonitor:
+              enabled: true
+              interval: 30s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 10
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PruneLast=true
