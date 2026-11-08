@@ -7,9 +7,11 @@
 - [x] Upgrade Goldilocks
 - [x] Upgrade External Secrets
 - [x] Upgrade CloudNativePG
-- [ ] Upgrade Kyverno
-- [ ] Upgrade Infisical
-- [ ] Upgrade Loki
-- [ ] Upgrade Beyla
-- [ ] Upgrade Linkerd and rotate trust chain
-- [ ] Final Argo, APM, logs, mTLS, and security verification
+- [x] Upgrade Kyverno
+- [x] Upgrade Infisical
+- [x] Upgrade Loki
+- [x] Upgrade Beyla
+- [x] Upgrade cert-manager
+- [x] Upgrade kube-prometheus-stack
+- [x] Upgrade Linkerd and rotate trust chain
+- [x] Final Argo, APM, logs, mTLS, and security verification

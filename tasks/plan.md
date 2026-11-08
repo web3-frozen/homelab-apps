@@ -40,34 +40,36 @@ validated before GitOps rollout, and each component has a rollback point.
 
 ### Phase 3: Stateful and Policy Components
 - [x] Upgrade CloudNativePG and verify both PostgreSQL clusters.
-- [ ] Upgrade Kyverno and verify policy reports and admission.
-- [ ] Upgrade Infisical and verify External Secrets sync.
+- [x] Upgrade Kyverno and verify policy reports and admission.
+- [x] Upgrade Infisical and verify External Secrets sync.
 
 ### Checkpoint: Stateful and Policy Components
-- [ ] Databases remain Ready.
-- [ ] Kyverno policies remain Enforcing.
-- [ ] ExternalSecret resources remain synced.
+- [x] Databases remain Ready.
+- [x] Kyverno policies remain Enforcing.
+- [x] ExternalSecret resources remain synced.
 
 ### Phase 4: Observability
-- [ ] Upgrade Loki and verify log ingestion/query.
-- [ ] Upgrade Beyla and verify metrics/traces.
-- [ ] Verify Grafana APM and logs dashboards.
+- [x] Upgrade Loki and verify log ingestion/query.
+- [x] Upgrade Beyla and verify metrics/traces.
+- [x] Upgrade cert-manager to v1.21.3.
+- [x] Upgrade kube-prometheus-stack to 93.1.0.
+- [x] Verify Grafana APM and logs dashboards.
 
 ### Checkpoint: Observability
-- [ ] Loki contains recent app logs with `namespace` labels.
-- [ ] Tempo receives spans.
-- [ ] Prometheus scrapes app metrics.
+- [x] Loki contains recent app logs with `namespace` labels.
+- [x] Tempo receives spans.
+- [x] Prometheus scrapes app metrics.
 
 ### Phase 5: Linkerd Trust Migration
-- [ ] Upgrade Linkerd CRDs/control plane/viz to edge-26.11.1.
-- [ ] Introduce cert-manager-managed root and issuer with overlap bundle.
-- [ ] Restart meshed workloads in controlled stages.
-- [ ] Cut over issuer, verify mTLS, then remove the legacy root.
+- [x] Upgrade Linkerd CRDs/control plane/viz to edge-26.11.1.
+- [x] Introduce cert-manager-managed root and issuer with overlap bundle.
+- [x] Restart meshed workloads in controlled stages.
+- [x] Cut over issuer, verify mTLS, then remove the legacy root.
 
 ### Checkpoint: Linkerd
-- [ ] Identity issuer is cert-manager managed and auto-rotating.
-- [ ] Linkerd check reports no trust-anchor or identity errors.
-- [ ] Workload traffic and APM traces remain healthy.
+- [x] Identity issuer is cert-manager managed and auto-rotating.
+- [x] Linkerd check reports no trust-anchor or identity errors.
+- [x] Workload traffic and APM traces remain healthy.
 
 ## Risks and Mitigations
 
