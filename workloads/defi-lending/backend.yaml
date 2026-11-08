@@ -4,16 +4,30 @@ metadata:
   name: defi-lending-api
   namespace: defi-lending
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: defi-lending-api
   namespace: defi-lending
 spec:
   replicas: 2
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: defi-lending-api
+  strategy:
+    blueGreen:
+      activeService: defi-lending-api
+      previewService: defi-lending-api-preview
+      previewReplicaCount: 1
+      autoPromotionEnabled: true
+      scaleDownDelaySeconds: 60
+      prePromotionAnalysis:
+        templates:
+          - templateName: defi-lending-api-smoke
+      postPromotionAnalysis:
+        templates:
+          - templateName: defi-lending-api-traffic
   template:
     metadata:
       labels:
@@ -69,6 +83,21 @@ metadata:
   namespace: defi-lending
   labels:
     app: defi-lending-api
+spec:
+  selector:
+    app: defi-lending-api
+  ports:
+    - port: 8080
+      targetPort: http
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: defi-lending-api-preview
+  namespace: defi-lending
+  labels:
+    app: defi-lending-api-preview
 spec:
   selector:
     app: defi-lending-api

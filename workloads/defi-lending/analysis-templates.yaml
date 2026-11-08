@@ -1,0 +1,96 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: defi-lending-api-smoke
+  namespace: defi-lending
+spec:
+  metrics:
+    - name: smoke
+      provider:
+        job:
+          metadata:
+            labels:
+              app: defi-lending-api-smoke
+          spec:
+            backoffLimit: 0
+            activeDeadlineSeconds: 180
+            template:
+              metadata:
+                labels:
+                  app: defi-lending-api-smoke
+              spec:
+                restartPolicy: Never
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containers:
+                  - name: smoke
+                    image: curlimages/curl:8.23.0
+                    command: ["/bin/sh", "-ec"]
+                    args:
+                      - |
+                        base="http://defi-lending-api-preview.defi-lending.svc.cluster.local:8080"
+
+                        for attempt in $(seq 1 30); do
+                          if curl -fsS "$base/readyz" >/dev/null; then
+                            break
+                          fi
+                          if [ "$attempt" = 30 ]; then
+                            echo "preview did not become ready" >&2
+                            exit 1
+                          fi
+                          sleep 2
+                        done
+
+                        test "$(curl -fsS "$base/healthz")" = "ok"
+                        test "$(curl -fsS "$base/readyz")" = "ok"
+
+                        body="$(curl -fsS "$base/api/pools?limit=1")"
+                        echo "$body" | grep -q '"data":\['
+                        echo "$body" | grep -q '"totalCount":'
+                    resources:
+                      requests:
+                        cpu: 10m
+                        memory: 16Mi
+                      limits:
+                        cpu: 100m
+                        memory: 64Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                        drop: ["ALL"]
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: defi-lending-api-traffic
+  namespace: defi-lending
+spec:
+  metrics:
+    - name: 5xx-error-rate
+      interval: 30s
+      count: 4
+      failureLimit: 1
+      successCondition: result[0] < 0.05
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending",http_response_status_code=~"5.."}[2m]))
+            /
+            clamp_min(sum(rate(http_server_request_duration_seconds_count{k8s_namespace_name="defi-lending"}[2m])), 0.000001)
+    - name: p95-latency
+      interval: 30s
+      count: 4
+      failureLimit: 1
+      successCondition: result[0] < 2
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(
+              0.95,
+              sum(rate(http_server_request_duration_seconds_bucket{k8s_namespace_name="defi-lending"}[2m])) by (le)
+            )

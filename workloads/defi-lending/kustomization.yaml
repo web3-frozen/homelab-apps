@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - backend.yaml
+- analysis-templates.yaml
 - frontend.yaml
 - ingress.yaml
 - network-policy.yaml
