@@ -19,7 +19,6 @@ spec:
     blueGreen:
       activeService: defi-lending-api
       previewService: defi-lending-api-preview
-      previewReplicaCount: 1
       autoPromotionEnabled: true
       scaleDownDelaySeconds: 60
       prePromotionAnalysis:
