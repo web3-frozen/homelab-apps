@@ -17,6 +17,8 @@ spec:
       valuesObject:
         controller:
           replicas: 1
+          deploymentLabels:
+            app: argo-rollouts
           resources:
             requests:
               cpu: 50m
@@ -30,6 +32,8 @@ spec:
               enabled: true
         dashboard:
           enabled: true
+          deploymentLabels:
+            app: argo-rollouts-dashboard
           resources:
             requests:
               cpu: 25m
