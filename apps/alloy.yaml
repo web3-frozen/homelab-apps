@@ -49,6 +49,10 @@ spec:
                 }]
                 tail_from_end = true
                 forward_to = [loki.process.retention_filter.receiver]
+                file_match {
+                  enabled     = true
+                  sync_period = "10s"
+                }
               }
 
               loki.write "default" {
