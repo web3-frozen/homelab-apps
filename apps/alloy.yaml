@@ -35,11 +35,6 @@ spec:
                   source     = "filename"
                   expression = "/var/log/pods/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_(?P<uid>[^/]+)/(?P<container>[^/]+)/.*\\.log"
                 }
-                stage.drop {
-                  older_than          = "10m"
-                  drop_counter_reason = "too_old"
-                }
-
                 forward_to = [loki.write.default.receiver]
               }
 
