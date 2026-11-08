@@ -85,6 +85,17 @@ spec:
               # requires an overlap window and a controlled mesh rollout.
               if kubectl get configmap linkerd-identity-trust-roots -n linkerd >/dev/null 2>&1 &&
                  kubectl get secret linkerd-identity-issuer -n linkerd >/dev/null 2>&1; then
+                # Linkerd's external issuer path requires the trust root beside
+                # the issuer certificate. Existing installs predate that check.
+                if ! kubectl get secret linkerd-identity-issuer -n linkerd \
+                  -o jsonpath='{.data.ca\.crt}' | grep -q .; then
+                  kubectl get configmap linkerd-identity-trust-roots -n linkerd \
+                    -o jsonpath='{.data.ca-bundle\.crt}' > /tmp/ca-bundle.crt
+                  CA_B64="$(base64 -w0 /tmp/ca-bundle.crt)"
+                  kubectl patch secret linkerd-identity-issuer -n linkerd \
+                    --type merge -p "{\"data\":{\"ca.crt\":\"${CA_B64}\"}}"
+                  echo "Added the existing trust anchor to the Linkerd issuer secret."
+                fi
                 echo "Linkerd trust anchor and identity issuer already exist; skipping generation."
                 exit 0
               fi
