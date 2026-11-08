@@ -15,8 +15,16 @@ spec:
       valuesObject:
         postgresql:
           enabled: true
+          primary:
+            service:
+              annotations:
+                config.linkerd.io/opaque-ports: "5432"
         redis:
           enabled: true
+          master:
+            service:
+              annotations:
+                config.linkerd.io/opaque-ports: "6379"
         ingress:
           enabled: false
           nginx:

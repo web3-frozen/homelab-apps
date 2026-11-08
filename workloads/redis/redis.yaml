@@ -147,6 +147,8 @@ metadata:
   namespace: redis
   labels:
     app: redis
+  annotations:
+    config.linkerd.io/opaque-ports: "6379"
 spec:
   clusterIP: None
   ports:
@@ -163,6 +165,8 @@ metadata:
   namespace: redis
   labels:
     app: redis
+  annotations:
+    config.linkerd.io/opaque-ports: "6379"
 spec:
   type: ClusterIP
   ports:
