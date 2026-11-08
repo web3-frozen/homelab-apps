@@ -89,7 +89,8 @@ sidecar provider. Change the JSON in Git, not the UI.
 
 Grafana admin credentials are stored in Infisical as
 `INFRA_GRAFANA_ADMIN_PASSWORD` and synced to the `monitoring/grafana-admin`
-Secret by External Secrets Operator.
+Secret by External Secrets Operator. Reloader restarts Grafana after a
+credential rotation is synced.
 
 ## APM
 
