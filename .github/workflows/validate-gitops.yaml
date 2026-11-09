@@ -7,7 +7,8 @@ on:
       - "platform/**"
       - "workloads/**"
       - "scripts/validate_gitops.py"
-      - ".github/workflows/validate-gitops.yaml"
+      - ".github/workflows/**"
+      - "renovate.json"
   push:
     branches:
       - main
