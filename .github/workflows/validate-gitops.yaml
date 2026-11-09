@@ -1,0 +1,117 @@
+name: Validate GitOps upgrades
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "platform/**"
+      - "workloads/**"
+      - "scripts/validate_gitops.py"
+      - ".github/workflows/**"
+      - "renovate.json"
+  push:
+    branches:
+      - main
+      - "chore/**"
+      - "renovate/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-gitops-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Render and server-side validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.22.1
+
+      - name: Install validator dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.3
+
+      - name: Lint GitHub Actions workflows
+        run: |
+          curl -fsSLO \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          curl -fsSLO \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_checksums.txt
+          sha256sum --check --ignore-missing actionlint_1.7.12_checksums.txt
+          tar -xzf actionlint_1.7.12_linux_amd64.tar.gz actionlint
+          ./actionlint -color
+
+      - name: Fetch bootstrap CRDs
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm --force-update
+          helm repo add traefik https://traefik.github.io/charts --force-update
+          helm repo update argo traefik
+          helm template argo-cd argo/argo-cd \
+            --version 10.17.1 \
+            --namespace argocd \
+            --include-crds \
+            --set crds.install=true > /tmp/argo-cd-crds.yaml
+          helm template traefik-crds traefik/traefik-crds \
+            --version 1.18.0 \
+            --namespace kube-system > /tmp/traefik-crds.yaml
+
+      - name: Render every Helm release and Kustomization
+        run: |
+          python scripts/validate_gitops.py \
+            --output .validation-renders \
+            --extra-crds-yaml /tmp/argo-cd-crds.yaml \
+            --extra-crds-yaml /tmp/traefik-crds.yaml
+
+      - name: Create ephemeral validation cluster
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          cluster_name: gitops-validation
+
+      - name: Install CRDs and namespaces
+        run: |
+          kubectl apply --server-side --field-manager=gitops-validation \
+            -f .validation-renders/crds.yaml
+          kubectl wait --for=condition=Established crd --all --timeout=180s
+          kubectl apply -f .validation-renders/namespaces.yaml
+
+      - name: Server-side dry-run all candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          kubectl apply --server-side --field-manager=gitops-validation \
+            --dry-run=server -f .validation-renders/applications.yaml
+
+          for manifest in \
+            .validation-renders/chart-*.yaml \
+            .validation-renders/kustomize-*.yaml \
+            .validation-renders/raw-manifests.yaml; do
+            echo "Validating ${manifest}"
+            kubectl apply --server-side --field-manager=gitops-validation \
+              --force-conflicts --dry-run=server -f "${manifest}" >/dev/null
+          done
+
+      - name: Upload rendered candidates
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gitops-validation-renders
+          path: .validation-renders/
+          if-no-files-found: ignore
+          retention-days: 7
