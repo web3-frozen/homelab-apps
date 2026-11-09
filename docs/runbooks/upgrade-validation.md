@@ -6,7 +6,7 @@ The `Validate GitOps upgrades` GitHub Actions workflow is the required
 pre-merge gate for Applications, platform manifests, workloads, and dependency
 updates.
 
-It performs four checks:
+It performs five checks:
 
 1. Parse every Kubernetes YAML document in `apps/`, `platform/`, and
    `workloads/`.
@@ -15,6 +15,8 @@ It performs four checks:
 3. Render every Kustomization with `kubectl kustomize`.
 4. Create an ephemeral kind cluster, install bootstrap and workload CRDs, then
    run `kubectl apply --dry-run=server` for every rendered candidate.
+5. Resolve every non-private container image tag with
+   `go-containerregistry/crane`, so a nonexistent image fails before merge.
 
 The workflow must be configured as a required status check for `main`. A failed
 render, policy/schema error, invalid CRD, or server-side rejection blocks merge.
