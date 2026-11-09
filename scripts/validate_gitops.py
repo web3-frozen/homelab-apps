@@ -337,7 +337,16 @@ def main() -> int:
     kustomize_documents, kustomize_namespaces = render_kustomizations(output_dir)
     extra = extra_documents(args.extra_crds_yaml)
 
-    namespaces = helm_namespaces | kustomize_namespaces
+    application_namespaces = {
+        str((application.get("metadata") or {}).get("namespace"))
+        for application in applications
+        if (application.get("metadata") or {}).get("namespace")
+    }
+    namespaces = (
+        helm_namespaces
+        | kustomize_namespaces
+        | application_namespaces
+    )
     write_cluster_prerequisites(
         output_dir,
         [*raw_documents, *helm_documents, *kustomize_documents],
