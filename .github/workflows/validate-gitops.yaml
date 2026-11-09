@@ -73,7 +73,8 @@ jobs:
 
       - name: Install CRDs and namespaces
         run: |
-          kubectl apply --server-side -f .validation-renders/crds.yaml
+          kubectl apply --server-side --field-manager=gitops-validation \
+            -f .validation-renders/crds.yaml
           kubectl wait --for=condition=Established crd --all --timeout=180s
           kubectl apply -f .validation-renders/namespaces.yaml
 
@@ -92,7 +93,7 @@ jobs:
             .validation-renders/raw-manifests.yaml; do
             echo "Validating ${manifest}"
             kubectl apply --server-side --field-manager=gitops-validation \
-              --dry-run=server -f "${manifest}" >/dev/null
+              --force-conflicts --dry-run=server -f "${manifest}" >/dev/null
           done
 
       - name: Upload rendered candidates
