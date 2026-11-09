@@ -46,6 +46,16 @@ jobs:
       - name: Install validator dependencies
         run: python -m pip install --disable-pip-version-check PyYAML==6.0.3
 
+      - name: Lint GitHub Actions workflows
+        run: |
+          curl -fsSLO \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          curl -fsSLO \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_checksums.txt
+          sha256sum --check --ignore-missing actionlint_1.7.12_checksums.txt
+          tar -xzf actionlint_1.7.12_linux_amd64.tar.gz actionlint
+          ./actionlint -color
+
       - name: Fetch bootstrap CRDs
         run: |
           helm repo add argo https://argoproj.github.io/argo-helm --force-update
