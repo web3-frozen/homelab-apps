@@ -108,6 +108,25 @@ def object_key(document: dict[str, Any]) -> tuple[str, str, str]:
     )
 
 
+def collect_images(documents: Iterable[dict[str, Any]]) -> set[str]:
+    images: set[str] = set()
+
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "image" and isinstance(child, str) and child.strip():
+                    images.add(child.strip())
+                else:
+                    visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    for document in documents:
+        visit(document)
+    return images
+
+
 def helm_repo_alias(repo_url: str) -> str:
     digest = hashlib.sha256(repo_url.encode("utf-8")).hexdigest()[:10]
     return f"validation-{digest}"
@@ -357,6 +376,13 @@ def main() -> int:
         extra,
         namespaces,
     )
+    images = collect_images(
+        [*raw_documents, *helm_documents, *kustomize_documents]
+    )
+    (output_dir / "images.txt").write_text(
+        "\n".join(sorted(images)) + ("\n" if images else ""),
+        encoding="utf-8",
+    )
 
     summary = {
         "applications": len(applications),
@@ -370,6 +396,7 @@ def main() -> int:
         "raw_documents": len(raw_documents),
         "rendered_helm_documents": len(helm_documents),
         "rendered_kustomize_documents": len(kustomize_documents),
+        "images": len(images),
     }
     (output_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True),
