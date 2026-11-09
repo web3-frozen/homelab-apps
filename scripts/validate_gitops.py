@@ -282,12 +282,16 @@ def write_cluster_prerequisites(
     namespaces = set(application_namespaces)
 
     for document in [*rendered_documents, *extra]:
+        metadata = document.get("metadata") or {}
+        namespace = metadata.get("namespace")
+        if namespace:
+            namespaces.add(str(namespace))
         if document.get("kind") == "CustomResourceDefinition":
-            name = str((document.get("metadata") or {}).get("name", ""))
+            name = str(metadata.get("name", ""))
             if name:
                 crds[(name, str(document.get("apiVersion", "")))] = document
         elif document.get("kind") == "Namespace":
-            name = (document.get("metadata") or {}).get("name")
+            name = metadata.get("name")
             if name:
                 namespaces.add(str(name))
 
