@@ -52,7 +52,7 @@ validated before GitOps rollout, and each component has a rollback point.
 - [x] Upgrade Loki and verify log ingestion/query.
 - [x] Upgrade Beyla and verify metrics/traces.
 - [x] Upgrade cert-manager to v1.21.3.
-- [x] Upgrade kube-prometheus-stack to 93.1.0.
+- [x] Upgrade kube-prometheus-stack to 93.1.1.
 - [x] Upgrade the K3s-bundled Traefik runtime to v3.7.17.
 - [x] Verify Grafana APM and logs dashboards.
 

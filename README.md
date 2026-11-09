@@ -21,7 +21,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
 | **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
-| **Dependencies** | [Renovate](https://docs.renovatebot.com/) | Daily GitHub App-authenticated dependency updates with automerge disabled |
+| **Dependencies** | [Renovate](https://docs.renovatebot.com/) | Daily GitHub App-authenticated updates; PRs must pass the blocking GitOps validation gate |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
 | **Infra Alerting** | AlertManagerConfig | Routes PrometheusRule alerts to Telegram (onchain-monitor namespace) |
 
@@ -122,6 +122,16 @@ application `5xx` failures.
 See [`docs/grafana-dashboards.md`](docs/grafana-dashboards.md) for dashboard
 ownership and troubleshooting.
 
+## Upgrade Validation
+
+Every upgrade pull request must pass `Validate GitOps upgrades` before merge.
+The gate renders all Helm and Kustomize candidates, then validates them in an
+ephemeral kind cluster with the required CRDs installed. A failure keeps the old
+version; it is not auto-merged.
+
+See [`docs/runbooks/upgrade-validation.md`](docs/runbooks/upgrade-validation.md)
+for scope and limitations.
+
 ## Access URLs
 
 | Service | URL |
@@ -182,3 +192,7 @@ Linkerd trust Job are documented in the
 
 Authentik login, allowlist, secret names, and OIDC recovery are documented in
 [`docs/runbooks/authentik-sso.md`](docs/runbooks/authentik-sso.md).
+
+Upgrade candidates are validated by
+[`scripts/validate_gitops.py`](scripts/validate_gitops.py) and the
+[`Validate GitOps upgrades`](.github/workflows/validate-gitops.yaml) workflow.
