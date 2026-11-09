@@ -83,14 +83,16 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
-          kubectl apply --dry-run=server -f .validation-renders/applications.yaml
+          kubectl apply --server-side --field-manager=gitops-validation \
+            --dry-run=server -f .validation-renders/applications.yaml
 
           for manifest in \
             .validation-renders/chart-*.yaml \
             .validation-renders/kustomize-*.yaml \
             .validation-renders/raw-manifests.yaml; do
             echo "Validating ${manifest}"
-            kubectl apply --dry-run=server -f "${manifest}" >/dev/null
+            kubectl apply --server-side --field-manager=gitops-validation \
+              --dry-run=server -f "${manifest}" >/dev/null
           done
 
       - name: Upload rendered candidates
