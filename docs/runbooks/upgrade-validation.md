@@ -42,6 +42,11 @@ runtime.
   major or high-risk changes.
 - Workload traffic promotion belongs in Argo Rollouts analysis, not the
   pre-merge render gate.
+- Probe timing cannot be proven by schema validation. After a workload rollout,
+  inspect container restart counts and probe failures even when the Argo
+  Application reports `Synced / Healthy`. Use a startup probe for slow
+  initialization, and keep liveness thresholds separate from readiness
+  thresholds so a temporary dependency delay does not cause a restart loop.
 - Database migrations need a restore-tested backup and a rollback plan even
   when the dry-run passes.
 

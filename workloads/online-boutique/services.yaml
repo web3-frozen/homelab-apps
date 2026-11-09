@@ -682,12 +682,22 @@ spec:
               value: "8080"
             - name: DISABLE_PROFILER
               value: "1"
+          startupProbe:
+            periodSeconds: 2
+            timeoutSeconds: 3
+            failureThreshold: 30
+            grpc:
+              port: 8080
           readinessProbe:
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
             grpc:
               port: 8080
           livenessProbe:
-            periodSeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
             grpc:
               port: 8080
           resources:
@@ -747,12 +757,22 @@ spec:
           image: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice:v0.10.5
           ports:
             - containerPort: 8080
+          startupProbe:
+            periodSeconds: 2
+            timeoutSeconds: 3
+            failureThreshold: 30
+            grpc:
+              port: 8080
           readinessProbe:
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
             grpc:
               port: 8080
           livenessProbe:
-            periodSeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
             grpc:
               port: 8080
           env:
