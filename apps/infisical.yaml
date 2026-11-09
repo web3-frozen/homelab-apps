@@ -30,6 +30,8 @@ spec:
           nginx:
             enabled: false
         infisical:
+          image:
+            tag: "v0.167.7"
           # Argo CD already rolls the Deployment when the pod template changes.
           # Avoid an extra restart on every render.
           rolloutOnEveryRender: false
