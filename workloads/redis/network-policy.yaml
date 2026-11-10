@@ -23,6 +23,13 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: demo-app
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - demo-inventory
+                  - demo-pricing
       ports:
         - protocol: TCP
           port: 6379
