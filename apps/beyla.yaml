@@ -22,6 +22,16 @@ spec:
         config:
           create: true
           data:
+            discovery:
+              instrument:
+                - k8s_pod_annotations:
+                    beyla.instrument: "true"
+                  exports:
+                    - metrics
+                    - traces
+            ebpf:
+              context_propagation: headers
+              track_request_headers: true
             attributes:
               kubernetes:
                 enable: true
@@ -38,7 +48,7 @@ spec:
                 - redis
               sampler:
                 name: parentbased_traceidratio
-                arg: "0.1"
+                arg: "1.0"
             filter:
               network:
                 k8s_dst_owner_name:
