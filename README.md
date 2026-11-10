@@ -8,6 +8,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | Category | Tool | Purpose |
 |----------|------|---------|
 | **Demo App** | [Google Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) | 10-microservice e-commerce demo (Go, Python, Java, C#, Node.js) |
+| **OTel Demo Workload** | Task Manager demo | Frontend, API, inventory, pricing, PostgreSQL, Redis, and a third-party quote provider |
 | **Monitoring App** | [Onchain Monitor](workloads/onchain-monitor/) | DeFi metrics monitoring with Telegram alerts (Go backend + Next.js frontend) |
 | **Service Mesh** | [Linkerd](https://linkerd.io/) | Lightweight mTLS, traffic metrics, golden signals |
 | **Secrets** | [External Secrets Operator](https://external-secrets.io/) + [Infisical](https://infisical.com/) | Secret management with self-hosted backend |
@@ -17,7 +18,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Storage** | [Longhorn](https://longhorn.io/) | Replicated persistent volumes with two default replicas |
 | **Right-sizing** | [Goldilocks](https://github.com/FairwindsOps/goldilocks) + VPA | CPU/memory recommendation dashboard |
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
-| **Metrics** | Prometheus + Grafana | Three consolidated Grafana dashboards for cluster, APM, and Onchain Monitor |
+| **Metrics** | Prometheus + Grafana | Four focused Grafana dashboards for cluster, APM, Onchain Monitor, and the OTel demo |
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
 | **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
@@ -60,6 +61,13 @@ homelab-apps/
     │   ├── namespace.yaml
     │   ├── services.yaml
     │   └── ingress.yaml
+    ├── demo-app/                # Annotation-driven OTel demo workload
+    │   ├── backend.yaml         # API + checkout entry point
+    │   ├── inventory.yaml       # PostgreSQL, Redis, and pricing orchestration
+    │   ├── pricing.yaml         # Third-party quote dependency
+    │   ├── postgres.yaml
+    │   ├── frontend.yaml
+    │   └── network-policy.yaml
     └── onchain-monitor/         # Onchain Monitor workload
         ├── kustomization.yaml
         ├── servicemonitor.yaml  # Prometheus scrape config
@@ -80,13 +88,14 @@ Redis namespace additionally allows ingress from the `onchain-monitor` namespace
 
 ## Grafana
 
-Grafana intentionally exposes three dashboards:
+Grafana intentionally exposes four dashboards:
 
 | Dashboard | Questions it answers |
 |-----------|----------------------|
 | **Homelab - Overview** | Are nodes and pods healthy? What is consuming CPU, memory, or disk? Which workloads are restarting, throttled, or missing replicas? |
 | **APM - Request and Dependency Latency** | Is the frontend, backend, or a third-party dependency slow? Which service, route, or upstream call has high p95 or p99 latency? |
 | **Onchain Monitor** | Is polling fresh? Which data source is failing or slow? Are alerts being delivered? What do recent logs show? |
+| **Demo App - End-to-End Observability** | What is the live service topology, which edge is slow, and what did one checkout request do from browser through PostgreSQL, Redis, and the external quote provider? |
 
 The kube-prometheus-stack default dashboards are disabled in
 `apps/monitoring.yaml`. Do not enable them again without removing or replacing
@@ -110,10 +119,15 @@ The APM dashboard answers:
 - Which outbound dependency is slow?
 - Which onchain data source is slow or failing?
 - Which individual request was slow, via Tempo traces?
+- What are the upstream and downstream services for an application?
 
 Prometheus supplies RED metrics and dependency latency. Tempo stores 10% sampled
 traces exported by Beyla. Alloy reads local pod logs and links logs to traces in
 Grafana through the `trace_id` derived field.
+
+Tempo's `service-graphs` processor writes `traces_service_graph_*` metrics back
+to Prometheus. Open **Explore -> Tempo -> Service Graph** to interact with the
+live topology. The same view is linked from the Demo App dashboard.
 
 The APM dashboard reports P95 and P99 side by side. The upstream error table
 keeps the HTTP status code so rate limits such as `429` are not confused with
@@ -176,6 +190,9 @@ User → Cloudflare (TLS) → Encrypted Tunnel → Traefik (HTTP:80)
                                                 └── auth.<domain> → Authentik (IP allowlisted)
 
 Pod-to-Pod: Linkerd mTLS sidecar proxy (automatic within meshed namespaces)
+Checkout path: browser -> demo-api -> demo-inventory -> demo-pricing
+               demo-inventory -> PostgreSQL / Redis
+               demo-pricing -> external market-data API
 Secrets: Infisical → External Secrets Operator → Kubernetes Secrets
 Identity: Authentik OIDC → ArgoCD and Grafana; ArgoCD local admin is break-glass
 Policy: Kyverno enforces security standards (privileged containers, resource limits, labels)

@@ -59,6 +59,8 @@ spec:
                   optional: true
             - name: REDIS_URL
               value: "redis://default:$(REDIS_PASSWORD)@redis-master.redis.svc.cluster.local:6379/0"
+            - name: INVENTORY_URL
+              value: "http://demo-inventory.demo-app.svc.cluster.local:8081"
           resources:
             requests:
               cpu: 50m

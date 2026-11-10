@@ -2,7 +2,7 @@
 
 ## Dashboard Catalog
 
-Grafana is deliberately limited to three dashboards in the `Homelab` folder.
+Grafana is deliberately limited to four dashboards in the `Homelab` folder.
 
 ### Homelab - Overview
 
@@ -43,6 +43,17 @@ Use this for application health, data freshness, business metrics, and logs.
 - TVL, token prices, subscriptions, and Telegram users
 - alert delivery
 - Loki logs filtered by level
+
+### Demo App - End-to-End Observability
+
+Use this for the annotation-driven observability POC.
+
+- live Tempo Service Graph link
+- service-graph edge latency at p95 and p99
+- checkout request rate and error rate
+- PostgreSQL operation latency
+- browser-to-API latency
+- trace drills from the dashboard into Tempo
 
 ## Ownership
 
@@ -103,6 +114,7 @@ Only the following project dashboards should be present:
 - `grafana-dashboard-homelab`
 - `grafana-dashboard-apm`
 - `grafana-dashboard-onchain`
+- `grafana-dashboard-demo-e2e`
 
 Old chart dashboards use names starting with `kube-prometheus-stack-` and the
 `grafana_dashboard=1` label. They are safe to remove only after
@@ -118,3 +130,24 @@ kubectl -n monitoring get secret grafana-admin
 If Grafana pods are waiting for `grafana-admin`, inspect the ExternalSecret event
 and confirm `INFRA_GRAFANA_ADMIN_PASSWORD` exists in Infisical project
 `homelab`, environment `prod`, path `/`.
+
+## Service map troubleshooting
+
+The Tempo datasource must link its service map to Prometheus:
+
+```yaml
+jsonData:
+  serviceMap:
+    datasourceUid: prometheus
+```
+
+The Tempo metrics-generator must enable both `service-graphs` and
+`span-metrics`. Verify generated series:
+
+```promql
+traces_service_graph_request_total
+traces_spanmetrics_calls_total
+```
+
+If the map is empty, generate traffic through the demo checkout action, then
+check the Tempo logs for metrics-generator remote-write errors.

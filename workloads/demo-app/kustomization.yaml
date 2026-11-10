@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - postgres.yaml
+- inventory.yaml
+- pricing.yaml
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
@@ -13,7 +15,13 @@ resources:
 images:
 - name: ghcr.io/web3-frozen/demo-api
   newName: ghcr.io/web3-frozen/demo-api
-  newTag: a691c33
+  newTag: "6407e98"
+- name: ghcr.io/web3-frozen/demo-inventory
+  newName: ghcr.io/web3-frozen/demo-inventory
+  newTag: "6407e98"
+- name: ghcr.io/web3-frozen/demo-pricing
+  newName: ghcr.io/web3-frozen/demo-pricing
+  newTag: "6407e98"
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
   newTag: 7ae0441
