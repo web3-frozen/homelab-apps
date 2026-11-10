@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - postgres.yaml
+- inventory.yaml
+- pricing.yaml
 - backend.yaml
 - frontend.yaml
 - ingress.yaml
