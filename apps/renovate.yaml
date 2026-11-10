@@ -37,12 +37,12 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.418.0"
+    targetRevision: "46.420.1"
     helm:
       valuesObject:
         fullnameOverride: renovate
         image:
-          tag: "44.223.1"
+          tag: "44.225.1"
         pod:
           annotations:
             linkerd.io/inject: enabled
@@ -111,6 +111,8 @@ spec:
               "platform": "github",
               "endpoint": "https://api.github.com/",
               "autodiscover": false,
+              "onboarding": false,
+              "requireConfig": "ignored",
               "repositories": [
                 "web3-frozen/homelab-apps",
                 "web3-frozen/pulumi-k3s-proxmox",
