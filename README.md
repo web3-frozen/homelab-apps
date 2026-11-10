@@ -12,7 +12,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Monitoring App** | [Onchain Monitor](workloads/onchain-monitor/) | DeFi metrics monitoring with Telegram alerts (Go backend + Next.js frontend) |
 | **Service Mesh** | [Linkerd](https://linkerd.io/) | Lightweight mTLS, traffic metrics, golden signals |
 | **Secrets** | [External Secrets Operator](https://external-secrets.io/) + [Infisical](https://infisical.com/) | Secret management with self-hosted backend |
-| **Identity / SSO** | [Authentik](https://goauthentik.io/) | OIDC identity provider for ArgoCD and Grafana with an admin IP allowlist |
+| **Identity / SSO** | [Authentik](https://goauthentik.io/) | Public OIDC identity provider for ArgoCD and Grafana |
 | **Policy** | [Kyverno](https://kyverno.io/) | Privileged-container and label checks enforced; resource-limit checks audited |
 | **TLS** | [cert-manager](https://cert-manager.io/) | Cloudflare DNS-01 automation and Let's Encrypt issuers |
 | **Storage** | [Longhorn](https://longhorn.io/) | Replicated persistent volumes with two default replicas |
@@ -190,7 +190,7 @@ User → Cloudflare (TLS) → Encrypted Tunnel → Traefik (HTTP:80)
                                                 ├── shop.<domain> → Online Boutique frontend
                                                 ├── argocd.<domain> → ArgoCD server
                                                 ├── grafana.<domain> → Grafana dashboard
-                                                └── auth.<domain> → Authentik (IP allowlisted)
+                                                └── auth.<domain> → Authentik (public OIDC endpoint)
 
 Pod-to-Pod: Linkerd mTLS sidecar proxy (automatic within meshed namespaces)
 Checkout path: browser -> demo-api -> demo-inventory -> demo-pricing
@@ -210,7 +210,7 @@ Recovery procedures for the Kyverno migration-hook loop and the immutable
 Linkerd trust Job are documented in the
 [Pulumi repository runbook](https://github.com/web3-frozen/pulumi-k3s-proxmox/blob/main/docs/runbooks/argocd-sync-failures.md).
 
-Authentik login, allowlist, secret names, and OIDC recovery are documented in
+Authentik login, public exposure, secret names, and OIDC recovery are documented in
 [`docs/runbooks/authentik-sso.md`](docs/runbooks/authentik-sso.md).
 
 Upgrade candidates are validated by

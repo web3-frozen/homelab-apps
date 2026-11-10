@@ -7,9 +7,10 @@
 - Bootstrap password: Infisical `homelab / prod / /`,
   key `INFRA_AUTHENTIK_BOOTSTRAP_PASSWORD`
 
-The host is restricted by `authentik-ip-allowlist` in
-`platform/authentik/ingress.yaml`. Update its `/32` when the administrator
-public IP changes. Do not expose the Authentik host outside that allowlist.
+The host is intentionally public through Cloudflare and Traefik so external
+users can complete SSO. There is no IP allowlist on the Authentik route.
+Protect the bootstrap and administrative accounts with strong unique passwords
+and MFA before relying on this endpoint outside the LAN.
 
 ArgoCD has a separate allowlist managed by Pulumi. Its local `admin` account is
 the break-glass path if Authentik is unavailable.
@@ -61,11 +62,15 @@ Never print these values in logs, tickets, or agent output.
 ```bash
 kubectl -n argocd get applications authentik authentik-config monitoring
 kubectl -n authentik get cluster,pods,externalsecret
-kubectl -n authentik get middleware authentik-ip-allowlist
+kubectl -n authentik get ingressroute authentik -o yaml
 curl -I https://auth.<domain>
 curl -I https://argocd.<domain>/auth/login
 curl -I https://grafana.<domain>/login/generic_oauth
 ```
+
+The Authentik route must not reference an `ipAllowList` middleware when public
+SSO access is required. Grafana is also public and relies on Authentik OIDC for
+interactive access; its local admin account remains the break-glass path.
 
 OIDC discovery:
 
