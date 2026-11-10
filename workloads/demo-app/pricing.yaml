@@ -38,8 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: demo-pricing
-          image: ghcr.io/web3-frozen/demo-api
-          command: ["/pricing"]
+          image: ghcr.io/web3-frozen/demo-pricing
           ports:
             - containerPort: 8082
               name: http
