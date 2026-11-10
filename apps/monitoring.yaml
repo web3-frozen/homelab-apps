@@ -76,6 +76,7 @@ spec:
               use_pkce: true
         prometheus:
           prometheusSpec:
+            enableRemoteWriteReceiver: true
             retention: 15d
             serviceMonitorSelectorNilUsesHelmValues: false
             podMonitorSelectorNilUsesHelmValues: false

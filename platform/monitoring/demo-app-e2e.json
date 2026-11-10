@@ -1,0 +1,421 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "APM",
+      "type": "link",
+      "url": "/d/apm-overview"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Homelab Overview",
+      "type": "link",
+      "url": "/d/homelab-overview"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(http_server_request_duration_seconds_count{service_namespace=\"demo-app\",service_name=~\"demo-frontend|demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\"}[$__rate_interval]))",
+          "legendFormat": "requests/sec",
+          "range": true
+        }
+      ],
+      "title": "Request Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(http_server_request_duration_seconds_count{service_namespace=\"demo-app\",service_name=~\"demo-frontend|demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\",http_response_status_code=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{service_namespace=\"demo-app\",service_name=~\"demo-frontend|demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\"}[$__rate_interval])), 0.000001)",
+          "legendFormat": "5xx ratio",
+          "range": true
+        }
+      ],
+      "title": "Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(db_client_operation_duration_seconds_count{service_name=\"demo-api\",db_system_name=\"postgresql\"}[$__rate_interval]))",
+          "legendFormat": "DB ops/sec",
+          "range": true
+        }
+      ],
+      "title": "PostgreSQL Operations",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(db_client_operation_duration_seconds_bucket{service_name=\"demo-api\",db_system_name=\"postgresql\"}[$__rate_interval])) by (le))",
+          "legendFormat": "DB p95",
+          "range": true
+        }
+      ],
+      "title": "PostgreSQL p95",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{service_namespace=\"demo-app\",service_name=\"demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\"}[$__rate_interval])) by (le, http_route))",
+          "legendFormat": "{{http_route}} p50",
+          "range": true
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{service_namespace=\"demo-app\",service_name=\"demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\"}[$__rate_interval])) by (le, http_route))",
+          "legendFormat": "{{http_route}} p95",
+          "range": true
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{service_namespace=\"demo-app\",service_name=\"demo-api\",http_route!~\"/healthz|/readyz|/live|/ready\"}[$__rate_interval])) by (le, http_route))",
+          "legendFormat": "{{http_route}} p99",
+          "range": true
+        }
+      ],
+      "title": "API Latency - p50 / p95 / p99",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(db_client_operation_duration_seconds_bucket{service_name=\"demo-api\",db_system_name=\"postgresql\"}[$__rate_interval])) by (le, db_operation_name, db_collection_name))",
+          "legendFormat": "{{db_operation_name}} {{db_collection_name}} p95",
+          "range": true
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum(rate(db_client_operation_duration_seconds_bucket{service_name=\"demo-api\",db_system_name=\"postgresql\"}[$__rate_interval])) by (le, db_operation_name, db_collection_name))",
+          "legendFormat": "{{db_operation_name}} {{db_collection_name}} p99",
+          "range": true
+        }
+      ],
+      "title": "PostgreSQL Latency - p95 / p99",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(http_client_request_duration_seconds_bucket{service_name=\"demo-frontend\",server_address=\"tasks.dummysui.monster\"}[$__rate_interval])) by (le, http_request_method))",
+          "legendFormat": "browser {{http_request_method}} p95",
+          "range": true
+        },
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum(rate(http_client_request_duration_seconds_bucket{service_name=\"demo-frontend\",server_address=\"tasks.dummysui.monster\"}[$__rate_interval])) by (le, http_request_method))",
+          "legendFormat": "browser {{http_request_method}} p99",
+          "range": true
+        }
+      ],
+      "title": "Browser API Calls - p95 / p99",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "id": 8,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "Use Grafana Explore with the Tempo datasource to open a full request waterfall.\n\nTraceQL:\n{ resource.service.name = \"demo-api\" }\n\nThen inspect the browser `HTTP POST`, frontend/Nginx spans, demo-api server span, and PostgreSQL `INSERT/UPDATE/SELECT` span under the same trace ID.",
+        "mode": "markdown"
+      },
+      "title": "Trace Drill-down",
+      "type": "text"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "demo-app",
+    "opentelemetry",
+    "end-to-end"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Demo App - End-to-End Observability",
+  "uid": "demo-app-e2e"
+}
