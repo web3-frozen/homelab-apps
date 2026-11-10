@@ -30,6 +30,16 @@ data:
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header traceparent $http_traceparent;
+        proxy_set_header tracestate $http_tracestate;
+      }
+
+      # Same-origin OTLP trace ingest; no collector is exposed publicly.
+      location = /v1/traces {
+        proxy_pass http://tempo.monitoring.svc.cluster.local:4318/v1/traces;
+        proxy_http_version 1.1;
+        proxy_set_header Host tempo.monitoring.svc.cluster.local;
+        proxy_set_header Content-Type $content_type;
       }
 
       # Health check
@@ -60,6 +70,9 @@ spec:
         app.kubernetes.io/name: demo-frontend
       annotations:
         linkerd.io/inject: enabled
+        beyla.instrument: "true"
+        resource.opentelemetry.io/service.name: "demo-frontend"
+        resource.opentelemetry.io/service.version: "poc"
     spec:
       serviceAccountName: demo-frontend
       securityContext:

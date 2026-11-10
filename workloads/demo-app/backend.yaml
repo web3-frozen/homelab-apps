@@ -27,6 +27,9 @@ spec:
         app.kubernetes.io/name: demo-api
       annotations:
         linkerd.io/inject: enabled
+        beyla.instrument: "true"
+        resource.opentelemetry.io/service.name: "demo-api"
+        resource.opentelemetry.io/service.version: "poc"
     spec:
       serviceAccountName: demo-api
       securityContext:
