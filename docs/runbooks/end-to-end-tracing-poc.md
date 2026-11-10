@@ -21,6 +21,9 @@ Questions the dashboard answers:
 - Frontend proxy: Nginx forwards OTLP to Tempo and forwards `traceparent`
 - Kubernetes: Linkerd provides the proxy hop
 - Services: Beyla eBPF creates HTTP, SQL, Redis, and external-call spans
+- Normalization: the OTel Collector maps `db.system.name` to the legacy
+  `db.system` key used by Tempo 2.9 service graphs, and adds `peer.service`
+  from `server.address` for uninstrumented HTTP dependencies
 - Linkerd compatibility: Beyla excludes the `linkerd-proxy` container from
   discovery. Instrumenting both the application and its sidecar creates
   duplicate client spans with the same span ID, which Tempo then mis-pairs into
@@ -61,7 +64,7 @@ The expected waterfall is:
 
 ```text
 browser HTTP POST
-  -> frontend Nginx / Linkerd
+  -> frontend Nginx
   -> demo-api POST /api/checkout
   -> demo-inventory POST /reserve
   -> demo-pricing GET /quote
@@ -69,6 +72,10 @@ browser HTTP POST
   -> PostgreSQL INSERT checkout_reservations
   -> Redis SET checkout:<id>
 ```
+
+The Collector is required for dependency edges. Beyla emits semantic-convention
+keys such as `db.system.name` and `server.address`; Tempo 2.9 still looks for the
+older `db.system` and `peer.service` keys when generating service graphs.
 
 ## Service map
 
