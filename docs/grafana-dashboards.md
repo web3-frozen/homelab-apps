@@ -49,7 +49,7 @@ Use this for application health, data freshness, business metrics, and logs.
 Use this for the annotation-driven observability POC.
 
 - live Tempo Service Graph link
-- service-graph edge latency at p95 and p99
+- caller-observed service-graph edge latency at p95 and p99
 - checkout request rate and error rate
 - PostgreSQL operation latency
 - browser-to-API latency

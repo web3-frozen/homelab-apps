@@ -29,7 +29,7 @@ data:
       batch: {}
 
     exporters:
-      otlp/tempo:
+      otlp_grpc/tempo:
         endpoint: tempo.monitoring.svc.cluster.local:4317
         tls:
           insecure: true
@@ -50,7 +50,7 @@ data:
             - transform
             - batch
           exporters:
-            - otlp/tempo
+            - otlp_grpc/tempo
 ---
 apiVersion: apps/v1
 kind: Deployment
