@@ -158,12 +158,16 @@ spec:
             emptyDir: {}
           - name: tmp
             emptyDir: {}
+          - name: containerbase-data
+            emptyDir: {}
         extraVolumeMounts:
           - name: renovate-token
             mountPath: /var/run/renovate-token
             readOnly: true
           - name: tmp
             mountPath: /tmp
+          - name: containerbase-data
+            mountPath: /opt/containerbase/data
   destination:
     server: https://kubernetes.default.svc
     namespace: renovate

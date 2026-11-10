@@ -42,3 +42,19 @@ kubectl -n renovate logs "job/renovate-manual-<timestamp>" --follow
 
 A healthy run processes the configured repositories and either reports no
 available updates or opens branches for review.
+
+## Read-only root filesystem
+
+Renovate runs with `readOnlyRootFilesystem: true`. Its containerbase tool cache
+must therefore be mounted writable at `/opt/containerbase/data`.
+
+Without that mount, Renovate can still detect updates, but artifact updates fail
+with errors such as:
+
+```text
+EROFS: can't write to /opt/containerbase/data
+```
+
+That leaves `go.sum` or `package-lock.json` unchanged and makes the generated
+pull request incomplete. Keep the `containerbase-data` emptyDir mounted
+whenever the read-only root filesystem is enabled.
