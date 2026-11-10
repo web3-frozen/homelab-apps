@@ -20,7 +20,7 @@ Push to `main` → ArgoCD auto-syncs everything.
 | **Network Policies** | Kubernetes NetworkPolicy | Default-deny ingress per namespace with explicit allow rules |
 | **Metrics** | Prometheus + Grafana | Four focused Grafana dashboards for cluster, APM, Onchain Monitor, and the OTel demo |
 | **Logs** | [Grafana Alloy](https://grafana.com/docs/alloy/) + [Loki](https://grafana.com/oss/loki/) | Kubernetes log collection and querying in Grafana |
-| **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
+| **APM / Traces** | [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/) + OTel Collector + [Tempo](https://grafana.com/oss/tempo/) | Service, dependency, and request-level latency analysis |
 | **CI runner** | Actions Runner Controller | Repository-scoped ephemeral runner for this repository |
 | **Dependencies** | [Renovate](https://docs.renovatebot.com/) | Daily GitHub App-authenticated updates; PRs must pass the blocking GitOps validation gate |
 | **Config Reload** | [Reloader](https://github.com/stakater/Reloader) | Auto-restart pods on ConfigMap/Secret changes |
@@ -46,6 +46,7 @@ homelab-apps/
 │   ├── alloy.yaml               # Log collector (replaces Promtail)
 │   ├── loki.yaml                # Log storage
 │   ├── tempo.yaml               # Trace storage (OTLP)
+│   ├── otel-collector.yaml      # Span normalization before Tempo
 │   ├── actions-runner.yaml      # ARC Helm chart + runner Application
 │   ├── renovate.yaml            # Renovate credentials + CronJob Applications
 │   └── reloader.yaml            # ConfigMap/Secret watcher
@@ -125,6 +126,8 @@ Prometheus supplies RED metrics and dependency latency. Tempo stores 10% sampled
 traces exported by Beyla. Alloy reads local pod logs and links logs to traces in
 Grafana through the `trace_id` derived field.
 
+Beyla exports through the Argo CD-managed OTel Collector, which normalizes
+database and external-dependency attributes before forwarding spans to Tempo.
 Tempo's `service-graphs` processor writes `traces_service_graph_*` metrics back
 to Prometheus. Open **Explore -> Tempo -> Service Graph** to interact with the
 live topology. The same view is linked from the Demo App dashboard.

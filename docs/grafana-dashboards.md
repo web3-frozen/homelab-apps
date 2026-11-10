@@ -61,6 +61,7 @@ Use this for the annotation-driven observability POC.
 |----------|-------|--------|
 | kube-prometheus-stack | Argo CD | `apps/monitoring.yaml` |
 | Beyla | Argo CD | `apps/beyla.yaml` |
+| OTel Collector | Argo CD | `apps/otel-collector.yaml` |
 | datasources, dashboards, alerts | Argo CD | `platform/monitoring/` |
 | Grafana admin password | External Secrets Operator | Infisical `INFRA_GRAFANA_ADMIN_PASSWORD` |
 | Grafana OIDC client secret | External Secrets Operator | Infisical `INFRA_AUTHENTIK_GRAFANA_CLIENT_SECRET` |
@@ -157,3 +158,7 @@ observed the same socket. In this cluster, Beyla must exclude the
 `linkerd-proxy` container through a `discovery.exclude_instrument` entry with
 `k8s_container_name: linkerd-proxy`; otherwise the application and sidecar
 produce duplicate client spans with the same span ID.
+
+Database, Redis, and external dependencies require the OTel Collector transform
+layer. Beyla emits `db.system.name`, while Tempo 2.9 reads `db.system`; without
+the mapping those client spans expire and never become service-graph edges.
