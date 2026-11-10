@@ -153,6 +153,11 @@ traces_spanmetrics_calls_total
 If the map is empty, generate traffic through the demo checkout action, then
 check the Tempo logs for metrics-generator remote-write errors.
 
+Dashboard links must use Grafana 13's `schemaVersion=1&panes=...` Explore URL
+with `queryType=serviceMap`. Do not use the legacy `left={...}` TraceQL URL:
+it can leave Explore in an invalid intermediate state and surface the RxJS
+`invalid object where a stream was expected` query error.
+
 Self-edges or reversed edges usually mean multiple instrumentation agents
 observed the same socket. In this cluster, Beyla must exclude the
 `linkerd-proxy` container through a `discovery.exclude_instrument` entry with
