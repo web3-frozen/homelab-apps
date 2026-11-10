@@ -20,6 +20,23 @@ spec:
           retention: 168h
           reportingEnabled: false
           memBallastSizeMbs: 256
+          metricsGenerator:
+            enabled: true
+            remoteWriteUrl: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+            processor:
+              service_graphs:
+                wait: 10s
+                max_items: 10000
+              span_metrics:
+                enable_target_info: true
+            registry:
+              collection_interval: 15s
+          overrides:
+            defaults:
+              metrics_generator:
+                processors:
+                  - service-graphs
+                  - span-metrics
           livenessProbe:
             initialDelaySeconds: 60
             periodSeconds: 20
