@@ -21,6 +21,10 @@ Questions the dashboard answers:
 - Frontend proxy: Nginx forwards OTLP to Tempo and forwards `traceparent`
 - Kubernetes: Linkerd provides the proxy hop
 - Services: Beyla eBPF creates HTTP, SQL, Redis, and external-call spans
+- Linkerd compatibility: Beyla excludes the `linkerd-proxy` container from
+  discovery. Instrumenting both the application and its sidecar creates
+  duplicate client spans with the same span ID, which Tempo then mis-pairs into
+  self-edges and missing service-graph edges.
 - Checkout: `demo-api -> demo-inventory -> demo-pricing`
 - State: inventory persists reservations in PostgreSQL and caches status in Redis
 - Third party: pricing calls a market-data HTTP API with a bounded timeout
@@ -88,3 +92,6 @@ the filtered Explore view.
   not break the checkout demo.
 - Do not export traces back into the same proxy route in a way that traces the
   export request itself. The fetch instrumentation ignores `/v1/traces`.
+- Do not remove the `linkerd-proxy` exclusion from Beyla discovery while Linkerd
+  injection is enabled on the demo namespace. Keep mTLS at the mesh layer and
+  let Beyla instrument only the application containers.
