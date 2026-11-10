@@ -17,3 +17,6 @@ images:
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
   newTag: 7ae0441
+- name: ghcr.io/web3-frozen/demo-pricing
+  newName: ghcr.io/web3-frozen/demo-pricing
+  newTag: "6407e98"
