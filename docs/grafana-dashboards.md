@@ -151,3 +151,9 @@ traces_spanmetrics_calls_total
 
 If the map is empty, generate traffic through the demo checkout action, then
 check the Tempo logs for metrics-generator remote-write errors.
+
+Self-edges or reversed edges usually mean multiple instrumentation agents
+observed the same socket. In this cluster, Beyla must exclude the
+`linkerd-proxy` container through
+`discovery.exclude_instrument.k8s_container_name`; otherwise the application
+and sidecar produce duplicate client spans with the same span ID.

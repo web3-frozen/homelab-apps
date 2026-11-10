@@ -29,6 +29,8 @@ spec:
                   exports:
                     - metrics
                     - traces
+              exclude_instrument:
+                - k8s_container_name: linkerd-proxy
             ebpf:
               context_propagation: headers
               track_request_headers: true
