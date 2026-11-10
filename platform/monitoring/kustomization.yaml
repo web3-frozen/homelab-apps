@@ -34,6 +34,14 @@ configMapGenerator:
         grafana_dashboard: "1"
       annotations:
         grafana_folder: Homelab
+  - name: grafana-dashboard-demo-e2e
+    files:
+      - demo-app-e2e.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Homelab
 
 generatorOptions:
   disableNameSuffixHash: true
