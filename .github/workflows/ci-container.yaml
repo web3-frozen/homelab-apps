@@ -269,11 +269,18 @@ jobs:
           cd ${{ inputs.workload-dir }}
           kustomize edit set image ${{ env.IMAGE }}=${{ env.IMAGE }}:${{ needs.build-push.outputs.image-tag }}
 
-      - name: Commit and push
+      - name: Push deployment branch
         if: steps.check-token.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          APP_NAME: ${{ inputs.app-name }}
+          IMAGE_TAG: ${{ needs.build-push.outputs.image-tag }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          branch="deploy/${APP_NAME}-${IMAGE_TAG}-${RUN_ID}"
+          git checkout -b "$branch"
           git add .
           git diff --staged --quiet && echo "No changes to commit" && exit 0
           git commit -m "deploy(${{ inputs.app-name }}): update image to ${{ needs.build-push.outputs.image-tag }}
@@ -281,4 +288,18 @@ jobs:
           Triggered by ${{ github.repository }}@${{ github.sha }}
 
           Co-authored-by: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
-          git push
+          git push -u origin "$branch"
+
+          gh pr create \
+            --repo web3-frozen/homelab-apps \
+            --base main \
+            --head "$branch" \
+            --title "deploy(${APP_NAME}): ${IMAGE_TAG}" \
+            --body "Automated image update from ${GITHUB_REPOSITORY}@${GITHUB_SHA}."
+
+          gh pr merge \
+            --repo web3-frozen/homelab-apps \
+            "$branch" \
+            --squash \
+            --auto \
+            --delete-branch
