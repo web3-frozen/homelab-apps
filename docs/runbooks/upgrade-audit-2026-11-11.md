@@ -54,12 +54,24 @@ combine it with dependency PRs.
 
 ### PostgreSQL
 
-`demo-db` and `onchain-monitor-db` run PostgreSQL `17.2`; the same-major current
-patch is `17.11`. Authentik already runs `18.6`.
+`demo-db` was patched from `17.2` to `17.11-system-bullseye` on 2026-11-11.
+The image family stayed on Debian 11. Do not jump these clusters to
+`system-trixie` in the same change.
 
-Take and verify a logical or volume backup first, then perform a controlled
-CloudNativePG rolling update. Do not test database upgrades directly in the
-routine dependency PR.
+`onchain-monitor-db` uses the same pin. Authentik already runs `18.6` and
+was not part of this patch.
+
+A one-instance CloudNativePG cluster does not switch over. The operator
+restarts the primary in place, and the pod may be rescheduled to another node
+while the RWO volume detaches. The `demo-db` restart began at 15:45:38Z and
+the cluster was healthy again at 15:49:40Z, about four minutes. Table count
+and live-row count matched the pre-upgrade backup. Record that window; do not
+describe it as zero downtime.
+
+Take and verify a logical backup with the server's own `pg_restore` before
+each database image change. The workstation `pg_restore` may be older than
+dump format 1.16 and is not proof. Do not test database upgrades in a routine
+dependency PR.
 
 ### Ubuntu nodes
 
