@@ -37,12 +37,12 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.424.0"
+    targetRevision: "46.425.1"
     helm:
       valuesObject:
         fullnameOverride: renovate
         image:
-          tag: "44.229.0"
+          tag: "44.232.1"
         pod:
           annotations:
             linkerd.io/inject: enabled

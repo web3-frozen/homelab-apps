@@ -16,7 +16,9 @@ chart's own version can hide an application-level major migration.
 - kube-prometheus-stack: `93.2.0`
 - Loki chart: `7.6.0`, application `3.6.18`
 - Reloader: `2.2.20`
-- Renovate chart: `46.424.0`, application `44.229.0`
+- Renovate chart: `46.425.1`, application `44.232.1`. The chart diff from
+  `46.424.0` is only the default image tag. The explicit `image.tag`
+  override must move with the chart, or the CronJob keeps the old image.
 - Infisical application: `v0.167.8`
 - Trivy and Trivy Action: `v0.76.2` and `v0.36.0`
 - GitHub Actions runner: `v2.338.2`
