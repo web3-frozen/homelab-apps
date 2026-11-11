@@ -149,6 +149,11 @@ version; it is not auto-merged.
 See [`docs/runbooks/upgrade-validation.md`](docs/runbooks/upgrade-validation.md)
 for scope and limitations.
 
+See
+[`docs/runbooks/upgrade-audit-2026-11-11.md`](docs/runbooks/upgrade-audit-2026-11-11.md)
+for the current version audit and the upgrades that require a maintenance
+window.
+
 ## Access URLs
 
 | Service | URL |
