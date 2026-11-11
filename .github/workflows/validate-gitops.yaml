@@ -2,14 +2,6 @@ name: Validate GitOps upgrades
 
 on:
   pull_request:
-    paths:
-      - "apps/**"
-      - "platform/**"
-      - "workloads/**"
-      - "scripts/validate_gitops.py"
-      - "scripts/validate_images.py"
-      - ".github/workflows/**"
-      - "renovate.json"
   push:
     branches:
       - main
