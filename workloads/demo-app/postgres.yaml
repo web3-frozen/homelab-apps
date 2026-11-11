@@ -8,6 +8,9 @@ metadata:
   namespace: demo-app
 spec:
   instances: 1
+  # Same-major patch on the existing Debian 11 image family.
+  # A one-instance cluster restarts its primary during this change.
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.11-system-bullseye
   storage:
     size: 5Gi
   postgresql:
