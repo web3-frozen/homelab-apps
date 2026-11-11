@@ -8,7 +8,11 @@ chart's own version can hide an application-level major migration.
 
 - K3s server and agents: `v1.37.2+k3s1`
 - ArgoCD chart: `10.17.2`, application `v3.6.1`
-- Traefik: `3.7.18`
+- Traefik: `v3.7.18` from `docker.io/library/traefik`. The first pin used
+  `rancher/mirrored-library-traefik:3.7.18`, which Docker Hub did not
+  publish. That left a surge pod in `ImagePullBackOff` while the previous
+  `3.7.17` pod kept serving. Do not call a Helm revision deployed until
+  the new pod is Ready.
 - kube-prometheus-stack: `93.2.0`
 - Loki chart: `7.6.0`, application `3.6.18`
 - Reloader: `2.2.20`
