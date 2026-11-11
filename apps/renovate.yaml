@@ -37,12 +37,12 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.420.1"
+    targetRevision: "46.424.0"
     helm:
       valuesObject:
         fullnameOverride: renovate
         image:
-          tag: "44.225.1"
+          tag: "44.229.0"
         pod:
           annotations:
             linkerd.io/inject: enabled
@@ -129,6 +129,18 @@ spec:
               "prHourlyLimit": 2,
               "rangeStrategy": "bump",
               "rebaseWhen": "conflicted",
+              "customManagers": [
+                {
+                  "customType": "regex",
+                  "description": "Update ArgoCD Helm chart targetRevision",
+                  "managerFilePatterns": ["/^apps/.*\\.ya?ml$/"],
+                  "matchStrings": [
+                    "repoURL: (?<registryUrl>https://[^\\n]+)\\n\\s+chart: (?<depName>[^\\n]+)\\n\\s+targetRevision: \\\"(?<currentValue>[^\\\"]+)\\\""
+                  ],
+                  "datasourceTemplate": "helm",
+                  "versioningTemplate": "helm"
+                }
+              ],
               "packageRules": [
                 {
                   "matchUpdateTypes": ["minor", "patch"],
