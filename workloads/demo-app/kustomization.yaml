@@ -24,4 +24,4 @@ images:
   newTag: b631324
 - name: ghcr.io/web3-frozen/demo-pricing
   newName: ghcr.io/web3-frozen/demo-pricing
-  newTag: "6407e98"
+  newTag: 90a90c5
