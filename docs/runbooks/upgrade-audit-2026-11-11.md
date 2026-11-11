@@ -41,10 +41,16 @@ Longhorn minor and major updates.
 
 ### Redis
 
-The shared cache moves from `redis:7-alpine` (`7.4.7`) to
-`redis:8.10.3-alpine`. A backup was taken before this change. This is a single-replica StatefulSet, so
-the restart is a cache outage, not a failover. Record the observed window in
-this file after ArgoCD rolls the pod. Do not describe it as zero downtime.
+The shared cache moved from `redis:7-alpine` (`7.4.7`) to
+`redis:8.10.3-alpine`. A backup was taken before the change. This is a
+single-replica StatefulSet, so the restart is a cache outage, not a failover.
+
+Observed window on 2026-11-11: the old pod was gone by 16:34:28Z and the new
+pod was Ready at 16:35:00Z, about 32 seconds. The watcher polled every 5
+seconds, so treat that as the bound, not an exact millisecond measurement.
+The pod also moved from `k3s-worker-1` to `k3s-worker-3` while the Longhorn
+RWO volume reattached. Key count stayed 579 and `PING` returned `PONG`.
+Do not describe this as zero downtime.
 
 Rollback is not an image pin reversal once Redis 8 rewrites persistence.
 Redis 8.10 writes RDB version 15, which Redis 7.4 cannot load. The pre-upgrade
