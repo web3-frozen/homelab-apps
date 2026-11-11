@@ -52,7 +52,7 @@ spec:
         runAsNonRoot: true
       initContainers:
         - name: init-config
-          image: redis:7-alpine
+          image: redis:8.10.3-alpine
           command:
             - sh
             - -c
@@ -84,7 +84,7 @@ spec:
             readOnlyRootFilesystem: true
       containers:
         - name: redis
-          image: redis:7-alpine
+          image: redis:8.10.3-alpine
           command: ["redis-server", "/etc/redis/redis.conf"]
           ports:
             - containerPort: 6379

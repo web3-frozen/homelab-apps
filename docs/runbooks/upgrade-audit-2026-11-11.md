@@ -41,12 +41,24 @@ Longhorn minor and major updates.
 
 ### Redis
 
-Current `7-alpine`; latest `8.10.3-alpine`.
+The shared cache moves from `redis:7-alpine` (`7.4.7`) to
+`redis:8.10.3-alpine`. A backup was taken before this change. This is a single-replica StatefulSet, so
+the restart is a cache outage, not a failover. Record the observed window in
+this file after ArgoCD rolls the pod. Do not describe it as zero downtime.
 
-Redis 8 is an application major upgrade. Test persistence, modules, ACLs, and
-client compatibility before changing the workload. The floating `redis:alpine`
-image used by the Online Boutique demo should also be pinned when that demo is
-next revised.
+Rollback is not an image pin reversal once Redis 8 rewrites persistence.
+Redis 8.10 writes RDB version 15, which Redis 7.4 cannot load. The pre-upgrade
+backup is `/home/mpleung/backups/20261111T162859Z-redis-7.4.7/` and contains
+`dump.rdb` plus `appendonlydir`. Restore those files onto the 7.4 volume
+before starting the old image. Do not test that restore on the live volume.
+
+The readiness probe still runs `redis-cli -a $(REDIS_PASSWORD) ping` without
+shell expansion. Redis 7 and the checked Redis 8 client both return exit 0 on
+`WRONGPASS`, so a green probe is not proof of authentication. Do not change
+that probe in the same pull request as the image.
+
+Do not touch the Online Boutique `redis:alpine` image in this change. Pin that
+floating tag only when that demo is revised on its own.
 
 ### Helm
 
