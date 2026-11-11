@@ -15,13 +15,13 @@ resources:
 images:
 - name: ghcr.io/web3-frozen/demo-api
   newName: ghcr.io/web3-frozen/demo-api
-  newTag: "6407e98"
+  newTag: b631324
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
-  newTag: 7ae0441
+  newTag: 0dfda0e
 - name: ghcr.io/web3-frozen/demo-inventory
   newName: ghcr.io/web3-frozen/demo-inventory
   newTag: b631324
 - name: ghcr.io/web3-frozen/demo-pricing
   newName: ghcr.io/web3-frozen/demo-pricing
-  newTag: "6407e98"
+  newTag: b631324
