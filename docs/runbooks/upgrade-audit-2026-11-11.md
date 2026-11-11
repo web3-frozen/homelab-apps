@@ -67,6 +67,26 @@ Node OS and kernel packages have not been audited as part of the Kubernetes
 version check. Use the Longhorn-aware node maintenance runbook and drain one
 node at a time. Do not force-drain a node with a single-replica volume.
 
+## Transitive images pinned by upstream charts
+
+An up-to-date chart can still render old runtime images. These images were
+found by rendering every release rather than only checking chart versions:
+
+- Infisical chart `1.12.0` renders its bundled PostgreSQL as
+  `bitnamilegacy/postgresql:16.2.0-debian-11-r16` and Redis as
+  `bitnamilegacy/redis:7.2.4-debian-11-r18`.
+- Linkerd viz `2026.11.1` renders Prometheus `v2.55.1`.
+- Actions Runner Controller `0.23.7` renders kube-rbac-proxy `v0.13.1`.
+- Goldilocks `11.2.1` carries an ingress-nginx admission-hook image from 2023.
+  Its ingress controller is not the active ingress path, but the hook image
+  still appears in rendered manifests.
+
+Do not change these image tags independently without checking the owning
+chart's compatibility. The preferred Infisical direction is to migrate the
+bundled data stores to the existing CloudNativePG operator and a managed Redis,
+then disable the chart's embedded dependencies. That is a data migration, not a
+routine dependency PR.
+
 ## Deliberately not bumped
 
 Online Boutique upstream release metadata is `v0.10.7`, but the public
