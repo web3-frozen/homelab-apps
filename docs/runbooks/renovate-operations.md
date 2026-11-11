@@ -45,16 +45,34 @@ available updates or opens branches for review.
 
 ## Read-only root filesystem
 
-Renovate runs with `readOnlyRootFilesystem: true`. Its containerbase tool cache
-must therefore be mounted writable at `/opt/containerbase/data`.
+Renovate runs with `readOnlyRootFilesystem: true`. Its containerbase data and
+tool directories must therefore both be mounted writable:
 
-Without that mount, Renovate can still detect updates, but artifact updates fail
-with errors such as:
+- `/opt/containerbase/data`
+- `/opt/containerbase/tools`
+
+Without those mounts, Renovate can still detect updates, but artifact updates
+fail with errors such as:
 
 ```text
 EROFS: can't write to /opt/containerbase/data
+EROFS: can't write to /opt/containerbase/tools
 ```
 
-That leaves `go.sum` or `package-lock.json` unchanged and makes the generated
-pull request incomplete. Keep the `containerbase-data` emptyDir mounted
-whenever the read-only root filesystem is enabled.
+That leaves `go.sum`, `package-lock.json`, or similar artifacts unchanged and
+makes the generated pull request incomplete. Keep both `containerbase-data` and
+`containerbase-tools` emptyDir volumes mounted whenever the read-only root
+filesystem is enabled.
+
+## Longhorn upgrade gate
+
+Longhorn chart versions use the chart's own `1.x` line while application
+releases advance much faster. A change such as `1.7.2` to `1.13.0` is therefore
+classified by Helm semver as a minor update even though it is a major storage
+migration.
+
+Do not group Longhorn into the routine non-major upgrade PR. The Renovate
+configuration requires dashboard approval for Longhorn minor and major chart
+updates. Follow the Longhorn upgrade and recovery guidance in a dedicated
+maintenance window, with healthy replicas on separate nodes and a current
+recovery point.

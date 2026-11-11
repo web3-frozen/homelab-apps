@@ -63,7 +63,7 @@ jobs:
           helm repo add traefik https://traefik.github.io/charts --force-update
           helm repo update argo traefik
           helm template argo-cd argo/argo-cd \
-            --version 10.17.1 \
+            --version 10.17.2 \
             --namespace argocd \
             --include-crds \
             --set crds.install=true > /tmp/argo-cd-crds.yaml

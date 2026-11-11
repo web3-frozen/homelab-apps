@@ -149,6 +149,12 @@ spec:
                 {
                   "matchUpdateTypes": ["major"],
                   "dependencyDashboardApproval": true
+                },
+                {
+                  "matchDatasources": ["helm"],
+                  "matchPackageNames": ["longhorn"],
+                  "matchUpdateTypes": ["minor", "major"],
+                  "dependencyDashboardApproval": true
                 }
               ]
             }
@@ -172,6 +178,8 @@ spec:
             emptyDir: {}
           - name: containerbase-data
             emptyDir: {}
+          - name: containerbase-tools
+            emptyDir: {}
         extraVolumeMounts:
           - name: renovate-token
             mountPath: /var/run/renovate-token
@@ -180,6 +188,8 @@ spec:
             mountPath: /tmp
           - name: containerbase-data
             mountPath: /opt/containerbase/data
+          - name: containerbase-tools
+            mountPath: /opt/containerbase/tools
   destination:
     server: https://kubernetes.default.svc
     namespace: renovate
