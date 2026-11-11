@@ -64,9 +64,12 @@ was not part of this patch.
 A one-instance CloudNativePG cluster does not switch over. The operator
 restarts the primary in place, and the pod may be rescheduled to another node
 while the RWO volume detaches. The `demo-db` restart began at 15:45:38Z and
-the cluster was healthy again at 15:49:40Z, about four minutes. Table count
-and live-row count matched the pre-upgrade backup. Record that window; do not
-describe it as zero downtime.
+the cluster was healthy again at 15:49:40Z, about four minutes. It also moved
+from `k3s-worker-1` to `k3s-worker-3` while the volume reattached.
+`onchain-monitor-db` restarted from 15:54:20Z to 15:57:52Z, about three and a
+half minutes, and also landed on `k3s-worker-3`. Both clusters kept their
+pre-upgrade table and live-row counts. Record that window; do not describe it
+as zero downtime.
 
 Take and verify a logical backup with the server's own `pg_restore` before
 each database image change. The workstation `pg_restore` may be older than
