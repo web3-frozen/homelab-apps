@@ -1,0 +1,26 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: homelab-ci
+value: -10
+preemptionPolicy: Never
+globalDefault: false
+description: Batch CI runs below production workloads without preempting them.
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ephemeral-ci-capacity
+  namespace: actions-runner-system
+spec:
+  hard:
+    pods: "2"
+    requests.cpu: "1"
+    requests.memory: 2Gi
+    limits.cpu: "2"
+    limits.memory: 4Gi
+  scopeSelector:
+    matchExpressions:
+      - scopeName: PriorityClass
+        operator: In
+        values: [homelab-ci]
