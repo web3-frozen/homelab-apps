@@ -181,12 +181,13 @@ def render_helm_applications(
         applications, key=lambda item: (item.get("metadata") or {}).get("name", "")
     ):
         source = (application.get("spec") or {}).get("source") or {}
-        chart = source.get("chart")
+        repo_url = source.get("repoURL")
+        oci_chart = str(repo_url).startswith("oci://") and "helm" in source
+        chart = repo_url if oci_chart else source.get("chart")
         if not chart:
             continue
 
         app_name = (application.get("metadata") or {}).get("name", "unknown")
-        repo_url = source.get("repoURL")
         target_revision = str(source.get("targetRevision", ""))
         namespace = str((application.get("spec") or {}).get("destination", {}).get(
             "namespace", "default"
@@ -201,7 +202,7 @@ def render_helm_applications(
             )
 
         alias = helm_repo_alias(str(repo_url))
-        if alias not in added_repositories:
+        if not oci_chart and alias not in added_repositories:
             subprocess.run(
                 ["helm", "repo", "add", alias, str(repo_url), "--force-update"],
                 cwd=ROOT,
@@ -227,7 +228,7 @@ def render_helm_applications(
                 "helm",
                 "template",
                 str(release_name),
-                f"{alias}/{chart}",
+                str(chart) if oci_chart else f"{alias}/{chart}",
                 "--version",
                 target_revision,
                 "--namespace",
