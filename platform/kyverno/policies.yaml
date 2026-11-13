@@ -1,117 +1,88 @@
-# Kyverno Best Practice Policies for Homelab
-# These policies enforce Kubernetes security best practices.
+# CEL replacements for the three legacy ClusterPolicies. Apply before pruning
+# the legacy resources so enforcement remains active during the migration.
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: disallow-privileged-containers
   annotations:
-    policies.kyverno.io/title: Disallow Privileged Containers
+    argocd.argoproj.io/sync-wave: "-1"
     policies.kyverno.io/category: Pod Security Standards (Baseline)
     policies.kyverno.io/severity: high
 spec:
-  validationFailureAction: Enforce
-  background: true
-  rules:
-    - name: privileged-containers
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-      exclude:
-        any:
-          - resources:
-              namespaces:
-                - kube-system
-                - linkerd
-                - linkerd-viz
-                - longhorn-system
-                - cnpg-system
-                - infisical
-                - kyverno
-                - actions-runner-system
-      validate:
-        message: "Privileged mode is disallowed."
-        pattern:
-          spec:
-            containers:
-              - =(securityContext):
-                  =(privileged): "false"
-            =(initContainers):
-              - =(securityContext):
-                  =(privileged): "false"
+  validationActions: [Deny]
+  autogen:
+    podControllers:
+      controllers: [daemonsets, deployments, jobs, replicasets, replicationcontrollers, statefulsets, cronjobs]
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, linkerd, linkerd-viz, longhorn-system, cnpg-system, infisical, kyverno, actions-runner-system]
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  validations:
+    - message: Privileged mode is disallowed.
+      expression: >-
+        (object.spec.containers + object.spec.?initContainers.orValue([]) +
+          object.spec.?ephemeralContainers.orValue([]))
+        .all(c, !c.?securityContext.privileged.orValue(false))
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-resource-limits
   annotations:
-    policies.kyverno.io/title: Require Resource Limits
-    policies.kyverno.io/category: Best Practices
+    argocd.argoproj.io/sync-wave: "-1"
     policies.kyverno.io/severity: medium
 spec:
-  validationFailureAction: Audit
-  background: true
-  rules:
-    - name: require-limits
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-      exclude:
-        any:
-          - resources:
-              namespaces:
-                - kube-system
-                - argocd
-                - monitoring
-                - linkerd
-                - linkerd-viz
-                - actions-runner-system
-      validate:
-        message: "CPU and memory limits are required."
-        pattern:
-          spec:
-            containers:
-              - resources:
-                  limits:
-                    memory: "?*"
-                    cpu: "?*"
+  validationActions: [Audit]
+  autogen:
+    podControllers:
+      controllers: [daemonsets, deployments, jobs, replicasets, replicationcontrollers, statefulsets, cronjobs]
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, argocd, monitoring, linkerd, linkerd-viz, actions-runner-system]
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  validations:
+    - message: CPU and memory limits are required.
+      expression: >-
+        object.spec.containers.all(c, ['cpu', 'memory'].all(k,
+          k in c.?resources.limits.orValue({})))
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-labels
   annotations:
-    policies.kyverno.io/title: Require app Label
-    policies.kyverno.io/category: Best Practices
+    argocd.argoproj.io/sync-wave: "-1"
     policies.kyverno.io/severity: low
 spec:
-  validationFailureAction: Enforce
-  background: true
-  rules:
-    - name: require-app-label
-      match:
-        any:
-          - resources:
-              kinds:
-                - Deployment
-                - StatefulSet
-      exclude:
-        any:
-          - resources:
-              namespaces:
-                - kube-system
-                - argocd
-                - monitoring
-      validate:
-        message: "Either 'app' or 'app.kubernetes.io/name' is required."
-        anyPattern:
-          - metadata:
-              labels:
-                app: "?*"
-          - metadata:
-              labels:
-                app.kubernetes.io/name: "?*"
+  validationActions: [Deny]
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, argocd, monitoring]
+    resourceRules:
+      - apiGroups: [apps]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [deployments, statefulsets]
+  validations:
+    - message: Either 'app' or 'app.kubernetes.io/name' is required.
+      expression: >-
+        ['app', 'app.kubernetes.io/name'].exists(k,
+          object.metadata.?labels[k].orValue('') != '')
