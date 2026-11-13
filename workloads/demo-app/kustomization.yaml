@@ -18,7 +18,7 @@ images:
   newTag: 5fdf0ff
 - name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
-  newTag: 5de59d6
+  newTag: 94fde56
 - name: ghcr.io/web3-frozen/demo-inventory
   newName: ghcr.io/web3-frozen/demo-inventory
   newTag: 5fdf0ff
