@@ -37,7 +37,7 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.431.0"
+    targetRevision: "46.431.2"
     helm:
       valuesObject:
         fullnameOverride: renovate
@@ -144,6 +144,7 @@ spec:
               "packageRules": [
                 {
                   "matchUpdateTypes": ["minor", "patch"],
+                  "excludePackageNames": ["longhorn"],
                   "groupName": "non-major dependencies"
                 },
                 {
