@@ -26,6 +26,17 @@
       "title": "Onchain Monitor",
       "type": "link",
       "url": "/d/onchain-monitor"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "CI Runners",
+      "type": "link",
+      "url": "/d/ci-runners"
     }
   ],
   "panels": [
