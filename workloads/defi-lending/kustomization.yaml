@@ -16,4 +16,4 @@ images:
   newTag: 99835f8
 - name: ghcr.io/web3-frozen/defi-lending-frontend
   newName: ghcr.io/web3-frozen/defi-lending-frontend
-  newTag: fb58eb5
+  newTag: 547137b
