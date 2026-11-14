@@ -40,6 +40,7 @@ token=$(openssl rand -hex 32)
 printf '%s,ci,ci,system:masters\n' "$token" > "$tmp_dir/token.csv"
 "$bin/kube-apiserver" --bind-address=127.0.0.1 --advertise-address=127.0.0.1 --secure-port=6443 \
   --endpoint-reconciler-type=none \
+  --allow-privileged=true \
   --etcd-servers=http://127.0.0.1:2379 --service-cluster-ip-range=10.250.0.0/24 \
   --tls-cert-file="$tmp_dir/tls.crt" --tls-private-key-file="$tmp_dir/tls.key" \
   --token-auth-file="$tmp_dir/token.csv" --authorization-mode=RBAC \
