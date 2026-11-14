@@ -84,7 +84,7 @@ spec:
         githubConfigSecret: controller-manager
         runnerScaleSetName: homelab-linux
         minRunners: 0
-        maxRunners: 1
+        maxRunners: 2
         controllerServiceAccount:
           namespace: actions-runner-system
           name: arc-gha-rs-controller
