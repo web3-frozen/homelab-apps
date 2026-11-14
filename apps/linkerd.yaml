@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://helm.linkerd.io/edge
     chart: linkerd-crds
-    targetRevision: "2026.11.1"
+    targetRevision: "2026.11.2"
     helm:
       valuesObject:
         installGatewayAPI: false
@@ -79,7 +79,7 @@ spec:
   source:
     repoURL: https://helm.linkerd.io/edge
     chart: linkerd-control-plane
-    targetRevision: "2026.11.1"
+    targetRevision: "2026.11.2"
     helm:
       valuesObject:
         identity:
@@ -112,7 +112,7 @@ spec:
   source:
     repoURL: https://helm.linkerd.io/edge
     chart: linkerd-viz
-    targetRevision: "2026.11.1"
+    targetRevision: "2026.11.2"
     helm:
       valuesObject:
         dashboard:
