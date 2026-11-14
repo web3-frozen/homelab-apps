@@ -71,8 +71,8 @@ releases advance much faster. A change such as `1.7.2` to `1.13.0` is therefore
 classified by Helm semver as a minor update even though it is a major storage
 migration.
 
-Do not group Longhorn into the routine non-major upgrade PR. The Renovate
-configuration requires dashboard approval for Longhorn minor and major chart
-updates. Follow the Longhorn upgrade and recovery guidance in a dedicated
+Do not group Longhorn into the routine non-major upgrade PR. The non-major
+group excludes `longhorn`, and minor or major Longhorn chart updates still
+require separate Dependency Dashboard approval. Follow the Longhorn upgrade and recovery guidance in a dedicated
 maintenance window, with healthy replicas on separate nodes and a current
 recovery point.
