@@ -17,8 +17,9 @@ spec:
     pods: "2"
     requests.cpu: "1"
     requests.memory: 2Gi
-    limits.cpu: "2"
-    limits.memory: 4Gi
+    # One image-build runner and one ordinary runner fit within the two-pod cap.
+    limits.cpu: "3"
+    limits.memory: 6Gi
   scopeSelector:
     matchExpressions:
       - scopeName: PriorityClass

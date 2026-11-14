@@ -9,7 +9,7 @@ on:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: homelab-homelab-apps
     permissions:
       contents: read
       packages: write

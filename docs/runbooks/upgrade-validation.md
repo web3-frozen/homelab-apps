@@ -13,7 +13,7 @@ It performs five checks:
 2. Render every Helm Application with its exact chart version and
    `valuesObject`.
 3. Render every Kustomization with `kubectl kustomize`.
-4. Create an ephemeral kind cluster, install bootstrap and workload CRDs, then
+4. Start a disposable Kubernetes API server and etcd in the job, install bootstrap and workload CRDs, then
    run `kubectl apply --dry-run=server` for every rendered candidate.
 5. Resolve every non-private container image tag with
    `go-containerregistry/crane`, so a nonexistent image fails before merge.
@@ -60,5 +60,6 @@ The script requires Helm, kubectl, and PyYAML. It intentionally rejects a
 floating Helm chart version; chart Applications must use an explicit
 `targetRevision`.
 
-The kind/server-side phase runs in GitHub Actions because it needs a disposable
-Kubernetes control plane.
+Run the same server-side validation locally with
+`bash scripts/dry-run-gitops.sh .validation-renders`. It starts its own API
+server and creates a temporary kubeconfig.
