@@ -19,6 +19,10 @@ spec:
         flags:
           logLevel: info
           watchSingleNamespace: actions-runner-system
+        metrics:
+          controllerManagerAddr: ":8080"
+          listenerAddr: ":8080"
+          listenerEndpoint: /metrics
         resources:
           requests:
             cpu: 100m
