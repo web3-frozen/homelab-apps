@@ -15,10 +15,14 @@ spec:
   source:
     repoURL: https://charts.longhorn.io
     chart: longhorn
-    targetRevision: "1.7.2"
+    targetRevision: "1.8.2"
     helm:
       releaseName: longhorn
       valuesObject:
+        preUpgradeChecker:
+          # Argo CD owns the sync; the manager still enforces the version check.
+          jobEnabled: false
+          upgradeVersionCheck: true
         defaultSettings:
           defaultReplicaCount: 2
           defaultDataPath: /var/lib/longhorn
@@ -54,5 +58,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - ClientSideApplyMigration=false
       - PruneLast=true
       - RespectIgnoreDifferences=true
