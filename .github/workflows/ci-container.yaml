@@ -94,7 +94,9 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
-          args: --timeout=5m
+          # 15m: on a cold Go build cache (self-hosted runner rebuilt 2026-11-14)
+          # package loading alone exceeded the old 5m cap on every run
+          args: --timeout=15m
 
       - name: Go test
         if: inputs.go-version != ''
