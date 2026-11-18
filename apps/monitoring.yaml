@@ -77,7 +77,7 @@ spec:
         prometheus:
           prometheusSpec:
             enableRemoteWriteReceiver: true
-            retention: 15d
+            retention: 30d
             serviceMonitorSelectorNilUsesHelmValues: false
             podMonitorSelectorNilUsesHelmValues: false
             ruleSelectorNilUsesHelmValues: false
