@@ -21,6 +21,8 @@ spec:
             app.kubernetes.io/name: oci-tokyo-vm
         spec:
           restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr-pull-secret
           securityContext:
             runAsNonRoot: true
             runAsUser: 65534
