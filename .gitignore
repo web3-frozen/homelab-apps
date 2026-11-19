@@ -1,2 +1,4 @@
 .validation-renders/
 .validation/
+__pycache__/
+*.pyc
