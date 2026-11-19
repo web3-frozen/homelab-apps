@@ -1,0 +1,59 @@
+# 每分鐘嘗試在 OCI Tokyo 搶 Always-Free VM，搶到發 Telegram。
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: oci-tokyo-vm
+  namespace: cronjobs
+  labels:
+    app.kubernetes.io/part-of: cronjobs
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 30
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: oci-tokyo-vm
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: ghcr-pull-secret
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            fsGroup: 65534
+          containers:
+            - name: grab
+              image: ghcr.io/web3-frozen/oci-tokyo-vm-grabber:latest
+              imagePullPolicy: Always
+              envFrom:
+                - secretRef:
+                    name: oci-tokyo-vm
+              env:
+                - name: CRONJOBS_LOG
+                  value: /dev/stdout
+                - name: CRONJOBS_STATE_DIR
+                  value: /tmp/cronjobs
+              volumeMounts:
+                - name: oci-private-key
+                  mountPath: /var/secrets/oci
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 256Mi
+          volumes:
+            - name: oci-private-key
+              secret:
+                secretName: oci-tokyo-vm
+                items:
+                  - key: oci_private_key
+                    path: private_key.pem
+                    mode: 0444
