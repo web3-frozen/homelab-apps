@@ -37,7 +37,7 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.445.3"
+    targetRevision: "46.449.2"
     helm:
       valuesObject:
         fullnameOverride: renovate
