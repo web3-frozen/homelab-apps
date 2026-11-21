@@ -12,9 +12,9 @@ resources:
 - network-policy.yaml
 
 images:
-- name: ghcr.io/web3-frozen/onchain-monitor
+- digest: sha256:62dcb01989945ff718dd0a46d4c75e3f310886a273d32325ee905c2d665578ab
+  name: ghcr.io/web3-frozen/onchain-monitor
   newName: ghcr.io/web3-frozen/onchain-monitor
-  newTag: 411616d
 - name: ghcr.io/web3-frozen/onchain-monitor-frontend
   newName: ghcr.io/web3-frozen/onchain-monitor-frontend
   newTag: 5cff5c0
