@@ -4,13 +4,11 @@ metadata:
   name: btc-tqqq-broker-config
 data:
   BINANCE_SPOT_SYMBOL: BTCUSDT
-  # Test mode validates against Binance without placing a live order.
-  BINANCE_EXECUTION_MODE: test
+  BINANCE_EXECUTION_MODE: live
   # Safety ceilings, not target allocations. Review before enabling live mode.
   BINANCE_MAX_ORDER_QUOTE: "10000"
   BINANCE_MAX_SLEEVE_QUOTE: "20000"
-  # Webull stays disabled until its credentials exist in Infisical.
-  WEBULL_EXECUTION_MODE: disabled
+  WEBULL_EXECUTION_MODE: live
   WEBULL_MAX_ORDER_USD: "10000"
   WEBULL_MAX_SLEEVE_USD: "20000"
   WEBULL_LIMIT_SLIPPAGE_BPS: "100"
