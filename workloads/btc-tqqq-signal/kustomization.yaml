@@ -2,10 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: btc-tqqq-signal
 resources:
-  - service-account.yaml
+  - external-secret.yaml
   - cronjob.yaml
   - network-policy.yaml
-configMapGenerator:
-  - name: btc-tqqq-source-loader
-    files:
-      - fetch_source.py
+images:
+  - name: ghcr.io/web3-frozen/btc-tqqq-signal
+    digest: sha256:b361ed770ba2bc24e7643863f18d3c025c4cfb85ed42cf33f0742b8227c08d55
