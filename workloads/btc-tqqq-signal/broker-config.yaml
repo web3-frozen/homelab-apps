@@ -3,6 +3,10 @@ kind: ConfigMap
 metadata:
   name: btc-tqqq-broker-config
 data:
+  # Flow A is the separate Binance + Webull sleeves.
+  FLOW_A_ENABLED: "true"
+  # Flow B stays gated until the Bitget credentials exist in Infisical.
+  FLOW_B_ENABLED: "false"
   BINANCE_SPOT_SYMBOL: BTCUSDT
   BINANCE_EXECUTION_MODE: live
   # Safety ceilings, not target allocations. Review before enabling live mode.
@@ -12,6 +16,14 @@ data:
   WEBULL_MAX_ORDER_USD: "10000"
   WEBULL_MAX_SLEEVE_USD: "20000"
   WEBULL_LIMIT_SLIPPAGE_BPS: "100"
+  BITGET_EXECUTION_MODE: disabled
+  BITGET_BTC_SYMBOL: BTCUSDT
+  BITGET_TQQQ_SYMBOL: RTQQQUSDT
+  BITGET_MAX_ORDER_USD: "10000"
+  BITGET_MAX_SLEEVE_USD: "20000"
+  BITGET_LIMIT_SLIPPAGE_BPS: "100"
+  BITGET_BTC_WEIGHT: "0.5"
+  BITGET_TQQQ_WEIGHT: "0.5"
   STATE_DIR: /var/lib/btc-tqqq
   WEBULL_TOKEN_DIR: /var/lib/btc-tqqq/webull
   HOME: /var/lib/btc-tqqq

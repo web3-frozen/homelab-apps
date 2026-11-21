@@ -82,7 +82,7 @@ spec:
             - name: binance
               image: ghcr.io/web3-frozen/btc-tqqq-signal
               imagePullPolicy: Always
-              command: ["python", "-B", "-u", "/app/trade.py", "--brokers", "binance", "--state-dir", "/var/lib/btc-tqqq"]
+              command: ["python", "-B", "-u", "/app/trade.py", "--flow", "A", "--brokers", "binance", "--state-dir", "/var/lib/btc-tqqq"]
               envFrom:
                 - configMapRef:
                     name: btc-tqqq-broker-config
@@ -145,12 +145,76 @@ spec:
             - name: webull
               image: ghcr.io/web3-frozen/btc-tqqq-signal
               imagePullPolicy: Always
-              command: ["python", "-B", "-u", "/app/trade.py", "--brokers", "webull", "--state-dir", "/var/lib/btc-tqqq"]
+              command: ["python", "-B", "-u", "/app/trade.py", "--flow", "A", "--brokers", "webull", "--state-dir", "/var/lib/btc-tqqq"]
               envFrom:
                 - configMapRef:
                     name: btc-tqqq-broker-config
                 - secretRef:
                     name: btc-tqqq-webull
+                - secretRef:
+                    name: btc-tqqq-telegram
+              volumeMounts:
+                - {name: state, mountPath: /var/lib/btc-tqqq}
+                - {name: tmp, mountPath: /tmp}
+              resources:
+                requests: {cpu: 50m, memory: 64Mi}
+                limits: {cpu: 500m, memory: 256Mi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: btc-tqqq-state
+            - name: tmp
+              emptyDir: {}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: btc-tqqq-bitget
+spec:
+  schedule: "35 9 * * 1"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  successfulJobsHistoryLimit: 14
+  failedJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: btc-tqqq-signal
+            app.kubernetes.io/component: bitget-executor
+          annotations:
+            linkerd.io/inject: disabled
+        spec:
+          imagePullSecrets:
+            - name: ghcr-pull-secret
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: bitget
+              image: ghcr.io/web3-frozen/btc-tqqq-signal
+              imagePullPolicy: Always
+              command: ["python", "-B", "-u", "/app/trade.py", "--flow", "B", "--brokers", "bitget", "--state-dir", "/var/lib/btc-tqqq"]
+              envFrom:
+                - configMapRef:
+                    name: btc-tqqq-broker-config
+                - secretRef:
+                    name: btc-tqqq-bitget
+                    optional: true
                 - secretRef:
                     name: btc-tqqq-telegram
               volumeMounts:
