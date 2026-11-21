@@ -5,15 +5,25 @@ emits signals to the Job log. Argo CD deploys the private GHCR image pinned by
 digest in kustomization.yaml.
 
 The broker CronJobs run from the same image and share a small Longhorn volume
-for SQLite ledgers and the Webull token cache:
+for SQLite ledgers and the Webull token cache. They are split into two
+independently gated flows:
+
+| Flow | Broker CronJobs | Gate |
+|---|---|---|
+| A | `btc-tqqq-binance`, `btc-tqqq-webull` | `FLOW_A_ENABLED` |
+| B | `btc-tqqq-bitget` | `FLOW_B_ENABLED` |
 
 - `btc-tqqq-binance` runs on Monday at 00:20 UTC in live mode.
 - `btc-tqqq-webull` runs before each US regular-session open. The model skips
   days that are not its weekly execution window. It runs in live mode using
   credentials from Infisical.
+- `btc-tqqq-bitget` runs shortly after the Monday US regular-session open. The
+  dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT`. Flow B and Bitget
+  execution stay disabled until its credentials and a sync test are complete.
 
-`BINANCE_MAX_*` and `WEBULL_MAX_*` in `broker-config.yaml` are safety ceilings,
-not target allocations. Review them before enabling live trading.
+`BINANCE_MAX_*`, `WEBULL_MAX_*` and `BITGET_MAX_*` in `broker-config.yaml` are
+safety ceilings, not target allocations. Review them before enabling live
+trading.
 
 The ExternalSecret uses the cluster's Infisical store to sync
 BTC_TQQQ_GHCR_READ_TOKEN from the homelab project's prod environment at / into
@@ -31,6 +41,18 @@ credentials come from these Infisical keys through `btc-tqqq-webull`:
 
 `WEBULL_ACCOUNT_ID` is only needed when the credentials can see more than one
 trading account. With a single account the job selects it automatically.
+
+Bitget requires these Infisical keys:
+
+- `BTC_TQQQ_BITGET_API_KEY`
+- `BTC_TQQQ_BITGET_API_SECRET`
+- `BTC_TQQQ_BITGET_API_PASSPHRASE`
+
+To enable Flow B, create an ExternalSecret that maps those three keys to
+`BITGET_API_KEY`, `BITGET_API_SECRET` and `BITGET_API_PASSPHRASE` in the
+`btc-tqqq-bitget` Secret, run a one-off Bitget probe, then set
+`BITGET_EXECUTION_MODE=test` and `FLOW_B_ENABLED=true`. Change the mode to
+`live` only after the probe and test order have been reviewed.
 
 Verified builds on master in web3-frozen/btc-tqqq-signal submit image digest
 updates as GitOps pull requests. GitHub merges the update after its checks
