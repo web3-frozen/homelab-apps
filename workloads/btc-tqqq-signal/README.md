@@ -4,7 +4,7 @@ Argo CD syncs the public deployment manifests. The init container fetches the
 signal implementation and history from a pinned private repository commit into
 an in-memory volume. The main container receives the source as a read-only mount.
 
-The job runs daily at 00:20 UTC (08:20 Hong Kong) and emits the strategy signals
+The job runs daily at 08:20 Hong Kong time (`Asia/Hong_Kong`) and emits the strategy signals
 to Job logs. This initial Application deploys the signal monitor.
 
 ## Infisical identity

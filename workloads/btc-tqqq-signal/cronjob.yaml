@@ -3,8 +3,8 @@ kind: CronJob
 metadata:
   name: btc-tqqq-signal
 spec:
-  schedule: "20 0 * * *"
-  timeZone: Etc/UTC
+  schedule: "20 8 * * *"
+  timeZone: Asia/Hong_Kong
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 7200
   successfulJobsHistoryLimit: 14
