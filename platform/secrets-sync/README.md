@@ -13,6 +13,7 @@ The secrets currently pushed are:
 |---|---|
 | `cloudflare/cloudflare-tunnel-token` | `INFRA_CLOUDFLARE_TUNNEL_TOKEN` |
 | `actions-runner-system/controller-manager` | `INFRA_ARC_GITHUB_TOKEN` |
+| `actions-runner-system/ghcr-pull-secret` | `INFRA_GHCR_DOCKERCONFIGJSON` |
 | `longhorn-system/homelab-offhost-s3` | `INFRA_LONGHORN_S3_ACCESS_KEY_ID`, `INFRA_LONGHORN_S3_SECRET_ACCESS_KEY`, `INFRA_LONGHORN_S3_ENDPOINTS`, `INFRA_LONGHORN_S3_CERT` |
 | `onchain-monitor/ghcr-pull-secret` | `INFRA_GHCR_DOCKERCONFIGJSON` |
 | `argocd/private-runner-repository` | `INFRA_ARGOCD_PRIVATE_RUNNER_DEPLOY_KEY` |
@@ -44,9 +45,6 @@ Every durable application credential is now either pushed by this app or read
 from Infisical through an ExternalSecret. The remaining direct Secrets fall
 into these buckets:
 
-- `actions-runner-system/ghcr-pull-secret` is byte-identical to the value in
-  `INFRA_GHCR_DOCKERCONFIGJSON`. Pulumi still creates it directly; a follow-up
-  should switch it to an ExternalSecret.
 - Argo CD's Redis password, admin hash/server key, cluster registration secret
   and the k3s node passwords are bootstrap/installation state. They are
   regenerated or re-adopted during bootstrap and cannot depend on Infisical
