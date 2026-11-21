@@ -43,6 +43,18 @@ spec:
           replicas: 1
           deploymentAnnotations:
             reloader.stakater.com/auto: "true"
+          livenessProbe:
+            failureThreshold: 6
+            periodSeconds: 15
+            timeoutSeconds: 10
+          readinessProbe:
+            failureThreshold: 6
+            periodSeconds: 15
+            timeoutSeconds: 10
+          startupProbe:
+            failureThreshold: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
           resources:
             requests:
               cpu: 100m
