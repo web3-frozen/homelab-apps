@@ -21,6 +21,13 @@ spec:
         global:
           additionalLabels:
             app: authentik
+          affinity:
+            podAntiAffinity: hard
+            nodeAffinity:
+              type: hard
+              matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
           image:
             pullPolicy: IfNotPresent
         authentik:
@@ -40,9 +47,20 @@ spec:
         postgresql:
           enabled: false
         server:
-          replicas: 1
+          replicas: 2
           deploymentAnnotations:
             reloader.stakater.com/auto: "true"
+          deploymentStrategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+          env:
+            - name: AUTHENTIK_WEB__WORKERS
+              value: "2"
+          pdb:
+            enabled: true
+            minAvailable: 1
           livenessProbe:
             failureThreshold: 6
             periodSeconds: 15
@@ -57,10 +75,10 @@ spec:
             timeoutSeconds: 5
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 250m
+              memory: 384Mi
             limits:
-              cpu: 500m
+              cpu: 1500m
               memory: 1536Mi
           service:
             type: ClusterIP
@@ -72,15 +90,23 @@ spec:
               enabled: true
               interval: 30s
         worker:
-          replicas: 1
+          replicas: 2
           deploymentAnnotations:
             reloader.stakater.com/auto: "true"
+          deploymentStrategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 0
+          pdb:
+            enabled: true
+            minAvailable: 1
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: 250m
+              memory: 384Mi
             limits:
-              cpu: 500m
+              cpu: 1000m
               memory: 1Gi
           metrics:
             serviceMonitor:
