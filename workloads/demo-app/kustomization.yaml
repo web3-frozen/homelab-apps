@@ -13,15 +13,15 @@ resources:
 - network-policy.yaml
 
 images:
-- name: ghcr.io/web3-frozen/demo-api
+- digest: sha256:286966fc9f2c870eeb7702169eb9f1ae704dfed8fb871241e7345242f59fcc48
+  name: ghcr.io/web3-frozen/demo-api
   newName: ghcr.io/web3-frozen/demo-api
-  newTag: 5fdf0ff
 - digest: sha256:2168bc579f46b78a0fc1e9ba553a463933d8300176975c642c4bacc24e6cffbc
   name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
-- name: ghcr.io/web3-frozen/demo-inventory
+- digest: sha256:9eef346472cdd0bfeb3edb192f0474317ddda441fdcffe9cc0810048889c5e53
+  name: ghcr.io/web3-frozen/demo-inventory
   newName: ghcr.io/web3-frozen/demo-inventory
-  newTag: 5fdf0ff
-- name: ghcr.io/web3-frozen/demo-pricing
+- digest: sha256:27699ee120ec86fdd6d42bd24eb7b3216bcfc3c0931c0c0eee7ee311a602e40c
+  name: ghcr.io/web3-frozen/demo-pricing
   newName: ghcr.io/web3-frozen/demo-pricing
-  newTag: 5fdf0ff
