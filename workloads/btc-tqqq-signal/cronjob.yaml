@@ -49,8 +49,9 @@ kind: CronJob
 metadata:
   name: btc-tqqq-binance
 spec:
-  schedule: "20 0 * * 1"
-  timeZone: Etc/UTC
+  # Schedules use HKT. US-market hours need review when US DST changes.
+  schedule: "20 8 * * 1"
+  timeZone: Asia/Hong_Kong
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 21600
   successfulJobsHistoryLimit: 14
@@ -112,8 +113,8 @@ kind: CronJob
 metadata:
   name: btc-tqqq-webull
 spec:
-  schedule: "20 9 * * 1-5"
-  timeZone: America/New_York
+  schedule: "20 22 * * 1-5"
+  timeZone: Asia/Hong_Kong
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 1800
   successfulJobsHistoryLimit: 14
@@ -175,8 +176,8 @@ kind: CronJob
 metadata:
   name: btc-tqqq-bitget
 spec:
-  schedule: "35 9 * * 1"
-  timeZone: America/New_York
+  schedule: "35 22 * * 1"
+  timeZone: Asia/Hong_Kong
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 1800
   successfulJobsHistoryLimit: 14

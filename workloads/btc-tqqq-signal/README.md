@@ -13,13 +13,17 @@ independently gated flows:
 | A | `btc-tqqq-binance`, `btc-tqqq-webull` | `FLOW_A_ENABLED` |
 | B | `btc-tqqq-bitget` | `FLOW_B_ENABLED` |
 
-- `btc-tqqq-binance` runs on Monday at 00:20 UTC in live mode.
+- `btc-tqqq-binance` runs on Monday at 08:20 HKT in live mode.
 - `btc-tqqq-webull` runs before each US regular-session open. The model skips
   days that are not its weekly execution window. It runs in live mode using
   credentials from Infisical.
-- `btc-tqqq-bitget` runs shortly after the Monday US regular-session open. The
-  dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT`. Flow B and Bitget
-  execution stay disabled until its credentials and a sync test are complete.
+- `btc-tqqq-bitget` runs shortly after the Monday US regular-session open at
+  22:35 HKT. The dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT`. Flow B
+  and Bitget execution stay disabled until its credentials and a sync test are
+  complete.
+
+All CronJob schedules use `Asia/Hong_Kong`. US-market-aligned hours need review
+when US daylight-saving time changes.
 
 `BINANCE_MAX_*`, `WEBULL_MAX_*` and `BITGET_MAX_*` in `broker-config.yaml` are
 safety ceilings, not target allocations. Review them before enabling live

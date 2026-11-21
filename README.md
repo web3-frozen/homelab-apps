@@ -182,7 +182,9 @@ required secrets, branch-protection checks, rollout and recovery steps.
 
 1. Create manifests in `workloads/my-app/` or `platform/my-tool/`
 2. Create `apps/my-app.yaml` ArgoCD Application pointing to that path
-3. `git push` — ArgoCD picks it up automatically
+3. Set every CronJob `timeZone` to `Asia/Hong_Kong` (HKT). Convert the intended
+   run time to HKT rather than keeping a foreign timezone.
+4. `git push` — ArgoCD picks it up automatically
 
 ## Linkerd Mesh Injection
 
