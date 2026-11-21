@@ -151,7 +151,6 @@ spec:
                     name: btc-tqqq-broker-config
                 - secretRef:
                     name: btc-tqqq-webull
-                    optional: true
                 - secretRef:
                     name: btc-tqqq-telegram
               volumeMounts:
