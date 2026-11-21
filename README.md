@@ -154,6 +154,21 @@ See
 for the current version audit and the upgrades that require a maintenance
 window.
 
+## CVE Remediation
+
+The four-hourly [`CVE Remediation`](.github/workflows/cve-remediation.yaml)
+workflow scans rendered and live workload images, including private GHCR
+packages. It opens same-major/minor patch-only PRs, dispatches private source
+rebuilds, and keeps deduplicated `security/cve` issues. Candidate images must
+pass `CVE remediation verified`, which rescans the exact baseline/candidate
+artifacts and rejects new CRITICAL findings.
+
+Protected platform charts, including Longhorn, are alert-only. Longhorn remains
+manual-sync because a multi-minor jump is not a supported upgrade path.
+
+See [`docs/runbooks/cve-remediation.md`](docs/runbooks/cve-remediation.md) for
+required secrets, branch-protection checks, rollout and recovery steps.
+
 ## Access URLs
 
 | Service | URL |

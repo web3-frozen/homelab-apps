@@ -121,7 +121,8 @@ spec:
                 "web3-frozen/onchain-monitor",
                 "web3-frozen/onchain-monitor-frontend",
                 "web3-frozen/defi-lending-api",
-                "web3-frozen/defi-lending-frontend"
+                "web3-frozen/defi-lending-frontend",
+                "web3-frozen/btc-tqqq-signal"
               ],
               "dependencyDashboard": true,
               "automerge": false,
@@ -157,9 +158,18 @@ spec:
                 },
                 {
                   "matchDatasources": ["helm"],
-                  "matchPackageNames": ["longhorn"],
-                  "matchUpdateTypes": ["minor", "major"],
-                  "dependencyDashboardApproval": true
+                  "matchPackageNames": [
+                    "longhorn",
+                    "argo-cd",
+                    "linkerd-control-plane",
+                    "cert-manager",
+                    "kyverno",
+                    "cloudnative-pg",
+                    "external-secrets"
+                  ],
+                  "dependencyDashboardApproval": true,
+                  "automerge": false,
+                  "platformAutomerge": false
                 }
               ]
             }

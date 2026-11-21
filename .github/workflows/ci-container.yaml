@@ -65,6 +65,31 @@ on:
         required: false
         type: string
         default: "1"
+      rebuild_reason:
+        description: "Why this image is being rebuilt (set by CVE remediation)"
+        required: false
+        type: string
+        default: ""
+      cve_ids:
+        description: "Comma-separated baseline CVE IDs"
+        required: false
+        type: string
+        default: ""
+      previous_image:
+        description: "Previously deployed image digest/reference"
+        required: false
+        type: string
+        default: ""
+      baseline_run_id:
+        description: "CVE remediation workflow run containing the baseline artifact"
+        required: false
+        type: string
+        default: ""
+      application:
+        description: "Argo CD Application to verify after merge"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -72,6 +97,7 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE: ghcr.io/${{ github.repository_owner }}/${{ inputs.image-name }}
+  GITOPS_REPO: web3-frozen/homelab-apps
 
 jobs:
   # ── Lint & Test ──────────────────────────────────────────────
@@ -180,6 +206,7 @@ jobs:
         with:
           context: ${{ inputs.build-context }}
           file: ${{ inputs.dockerfile }}
+          pull: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -255,16 +282,13 @@ jobs:
         id: check-token
         run: |
           if [ -z "$TOKEN" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::GITOPS_TOKEN not set — skipping GitOps update"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::error::GITOPS_TOKEN is required to open the GitOps deployment PR"
+            exit 1
           fi
         env:
           TOKEN: ${{ secrets.GITOPS_TOKEN }}
 
       - name: Checkout homelab-apps
-        if: steps.check-token.outputs.skip != 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: web3-frozen/homelab-apps
@@ -272,45 +296,112 @@ jobs:
           ref: main
 
       - name: Setup Kustomize
-        if: steps.check-token.outputs.skip != 'true'
         uses: imranismail/setup-kustomize@53f941b41dca13ed61874bbc6b4b6e1562877530 # v3.0.0
 
-      - name: Update image tag
-        if: steps.check-token.outputs.skip != 'true'
+      - name: Pin tested image digest
         run: |
           cd ${{ inputs.workload-dir }}
-          kustomize edit set image ${{ env.IMAGE }}=${{ env.IMAGE }}:${{ needs.build-push.outputs.image-tag }}
+          kustomize edit set image ${{ env.IMAGE }}=${{ env.IMAGE }}@${{ needs.build-push.outputs.image-digest }}
 
       - name: Push deployment branch
-        if: steps.check-token.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           APP_NAME: ${{ inputs.app-name }}
           IMAGE_TAG: ${{ needs.build-push.outputs.image-tag }}
+          IMAGE_DIGEST: ${{ needs.build-push.outputs.image-digest }}
+          REBUILD_REASON: ${{ inputs.rebuild_reason }}
+          CVE_IDS: ${{ inputs.cve_ids }}
+          PREVIOUS_IMAGE: ${{ inputs.previous_image }}
+          BASELINE_RUN_ID: ${{ inputs.baseline_run_id }}
+          APPLICATION: ${{ inputs.application }}
+          WORKLOAD_DIR: ${{ inputs.workload-dir }}
           RUN_ID: ${{ github.run_id }}
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           branch="deploy/${APP_NAME}-${IMAGE_TAG}-${RUN_ID}"
           git checkout -b "$branch"
           git add .
-          git diff --staged --quiet && echo "No changes to commit" && exit 0
-          git commit -m "deploy(${{ inputs.app-name }}): update image to ${{ needs.build-push.outputs.image-tag }}
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
 
-          Triggered by ${{ github.repository }}@${{ github.sha }}
+          marker_token=""
+          if [ -n "$BASELINE_RUN_ID" ] && [ -n "$CVE_IDS" ]; then
+            marker_token=$(python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import zlib
 
-          Co-authored-by: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+          image = os.environ["IMAGE"]
+          repository = image.split("@", 1)[0]
+          last = repository.rsplit("/", 1)[-1]
+          if ":" in last:
+              repository = repository.rsplit(":", 1)[0]
+          application = os.environ.get("APPLICATION", "").strip()
+          if not application:
+              application = os.path.basename(os.environ.get("WORKLOAD_DIR", "").rstrip("/"))
+          marker = {
+              "version": 1,
+              "kind": "private-image",
+              "source_run": {
+                  "repo": os.environ["GITOPS_REPO"],
+                  "run_id": int(os.environ["BASELINE_RUN_ID"]),
+                  "artifact": "cve-scan",
+              },
+              "applications": [application] if application else [],
+              "repositories": [repository],
+              "image": f"{image}@{os.environ['IMAGE_DIGEST']}",
+              "previous_image": os.environ.get("PREVIOUS_IMAGE", ""),
+              "cve_ids": sorted(filter(None, os.environ.get("CVE_IDS", "").split(","))),
+              "changes": [{
+                  "kind": "digest-pin",
+                  "file": f"{os.environ.get('WORKLOAD_DIR', '').rstrip('/')}/kustomization.yaml",
+                  "image": repository,
+                  "digest": os.environ["IMAGE_DIGEST"],
+              }],
+          }
+          raw = json.dumps(marker, sort_keys=True, separators=(",", ":")).encode()
+          print(base64.urlsafe_b64encode(zlib.compress(raw, 9)).decode().rstrip("="))
+          PY
+          )
+          fi
+
+          commit_title="deploy(${APP_NAME}): pin ${IMAGE_TAG} digest"
+          if [ -n "$marker_token" ]; then
+            commit_title="deploy(${APP_NAME}): CVE rebuild ${IMAGE_TAG}"
+            git commit -m "$commit_title" -m "CVE-Remediation: ${marker_token}"
+          else
+            git commit -m "$commit_title"
+          fi
+
+          body="Automated image update from ${GITHUB_REPOSITORY}@${GITHUB_SHA}.
+
+          Image: \`${IMAGE}@${IMAGE_DIGEST}\`${REBUILD_REASON:+
+
+          Rebuild reason: ${REBUILD_REASON}}
+
+          Triggered by ${{ github.repository }}@${{ github.sha }}"
+          if [ -n "$marker_token" ]; then
+            body="${body}
+
+          <!-- cve-remediation:v1:${marker_token} -->"
+          fi
+
           git push -u origin "$branch"
 
           gh pr create \
-            --repo web3-frozen/homelab-apps \
+            --repo "$GITOPS_REPO" \
             --base main \
             --head "$branch" \
             --title "deploy(${APP_NAME}): ${IMAGE_TAG}" \
-            --body "Automated image update from ${GITHUB_REPOSITORY}@${GITHUB_SHA}."
+            --body "$body"
 
           gh pr merge \
-            --repo web3-frozen/homelab-apps \
+            --repo "$GITOPS_REPO" \
             "$branch" \
             --squash \
             --auto \
