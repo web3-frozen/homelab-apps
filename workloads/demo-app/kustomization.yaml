@@ -19,9 +19,9 @@ images:
 - digest: sha256:2168bc579f46b78a0fc1e9ba553a463933d8300176975c642c4bacc24e6cffbc
   name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
-- name: ghcr.io/web3-frozen/demo-inventory
+- digest: sha256:9eef346472cdd0bfeb3edb192f0474317ddda441fdcffe9cc0810048889c5e53
+  name: ghcr.io/web3-frozen/demo-inventory
   newName: ghcr.io/web3-frozen/demo-inventory
-  newTag: 5fdf0ff
 - name: ghcr.io/web3-frozen/demo-pricing
   newName: ghcr.io/web3-frozen/demo-pricing
   newTag: 5fdf0ff
