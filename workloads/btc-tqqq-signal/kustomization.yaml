@@ -2,14 +2,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: btc-tqqq-signal
 resources:
-  - state.yaml
-  - broker-config.yaml
-  - external-secret.yaml
-  - binance-external-secret.yaml
-  - webull-external-secret.yaml
-  - telegram-external-secret.yaml
-  - cronjob.yaml
-  - network-policy.yaml
+- state.yaml
+- broker-config.yaml
+- external-secret.yaml
+- binance-external-secret.yaml
+- webull-external-secret.yaml
+- telegram-external-secret.yaml
+- cronjob.yaml
+- network-policy.yaml
 images:
-  - name: ghcr.io/web3-frozen/btc-tqqq-signal
-    digest: sha256:9d962f0968983f7c6cf37e232566867ae7a3eeff0fa7e24d340b7cf6a1360ac6
+- digest: sha256:f4a57df56ce416011b0ca2dc5f395ce4bffcd703f825d0cb4c670a54a9865d29
+  name: ghcr.io/web3-frozen/btc-tqqq-signal
+  newName: ghcr.io/web3-frozen/btc-tqqq-signal
