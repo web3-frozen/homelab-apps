@@ -8,3 +8,4 @@ resources:
   - authentik-blueprints.yaml
   - authentik-db.yaml
   - ingress.yaml
+  - infisical-ingress.yaml

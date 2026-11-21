@@ -22,8 +22,9 @@ the break-glass path if Authentik is unavailable.
 | `authentik` | n/a | GoAuthentik Helm chart |
 | ArgoCD | `argocd` | `https://argocd.<domain>/auth/callback` |
 | Grafana | `grafana` | `https://grafana.<domain>/login/generic_oauth` |
+| Infisical | `infisical` | `https://infisical.<domain>/api/v1/sso/oidc/callback` |
 
-The `homelab-sso` blueprint creates both providers and applications.
+The `homelab-sso` blueprint creates all providers and applications.
 `homelab-admins` maps to ArgoCD `role:admin` and Grafana `Admin`.
 
 ## Secrets
@@ -36,6 +37,7 @@ All runtime secrets are delivered by External Secrets Operator:
 - `INFRA_AUTHENTIK_BOOTSTRAP_TOKEN`
 - `INFRA_AUTHENTIK_ARGOCD_CLIENT_SECRET`
 - `INFRA_AUTHENTIK_GRAFANA_CLIENT_SECRET`
+- `INFRA_AUTHENTIK_INFISICAL_CLIENT_SECRET`
 
 Never print these values in logs, tickets, or agent output.
 
@@ -65,12 +67,14 @@ kubectl -n authentik get middleware authentik-ip-allowlist
 curl -I https://auth.<domain>
 curl -I https://argocd.<domain>/auth/login
 curl -I https://grafana.<domain>/login/generic_oauth
+curl -I https://infisical.<domain>
 ```
 
 OIDC discovery:
 
 ```bash
 curl -fsS https://auth.<domain>/application/o/argocd/.well-known/openid-configuration
+curl -fsS https://auth.<domain>/application/o/infisical/.well-known/openid-configuration
 ```
 
 The ArgoCD flow must use PKCE and request the `groups` ID-token claim.

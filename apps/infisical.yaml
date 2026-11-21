@@ -32,6 +32,13 @@ spec:
         infisical:
           image:
             tag: "v0.167.8"
+          extraEnv:
+            - name: SITE_URL
+              value: https://infisical.dummysui.monster
+            - name: HTTPS_ENABLED
+              value: "true"
+            - name: TRUSTED_PROXY_CIDRS
+              value: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,10.42.0.0/16
           # Argo CD already rolls the Deployment when the pod template changes.
           # Avoid an extra restart on every render.
           rolloutOnEveryRender: false
