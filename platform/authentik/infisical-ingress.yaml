@@ -36,6 +36,17 @@ spec:
       - X-authentik-meta-version
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: infisical-oidc-login-redirect
+  namespace: infisical
+spec:
+  redirectRegex:
+    regex: ^https?://infisical\.dummysui\.monster/login/?$
+    replacement: https://infisical.dummysui.monster/api/v1/sso/oidc/login?orgSlug=admin-org-wp-xr
+    permanent: false
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: infisical-auth
@@ -67,6 +78,7 @@ spec:
       priority: 10
       middlewares:
         - name: infisical-ip-allowlist
+        - name: infisical-oidc-login-redirect
         - name: infisical-forward-auth
       services:
         - name: infisical-infisical-standalone-infisical
