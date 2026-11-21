@@ -22,9 +22,13 @@ the break-glass path if Authentik is unavailable.
 | `authentik` | n/a | GoAuthentik Helm chart |
 | ArgoCD | `argocd` | `https://argocd.<domain>/auth/callback` |
 | Grafana | `grafana` | `https://grafana.<domain>/login/generic_oauth` |
+| Infisical | n/a (forward auth) | n/a |
 
-The `homelab-sso` blueprint creates both providers and applications.
+The `homelab-sso` blueprint creates all providers and applications.
 `homelab-admins` maps to ArgoCD `role:admin` and Grafana `Admin`.
+Infisical uses an Authentik forward-auth proxy provider because native OIDC SSO
+requires a paid Infisical license and configured SMTP. Traefik sends every
+request through the embedded Authentik outpost before it reaches Infisical.
 
 ## Secrets
 
@@ -65,7 +69,12 @@ kubectl -n authentik get middleware authentik-ip-allowlist
 curl -I https://auth.<domain>
 curl -I https://argocd.<domain>/auth/login
 curl -I https://grafana.<domain>/login/generic_oauth
+curl -I https://infisical.<domain>
+curl -I https://infisical.<domain>/outpost.goauthentik.io/ping
 ```
+
+An unauthenticated request to Infisical should redirect to Authentik. The
+outpost ping endpoint should return `204` from an allowed source IP.
 
 OIDC discovery:
 

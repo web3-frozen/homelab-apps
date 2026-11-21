@@ -14,12 +14,13 @@ metadata:
   namespace: actions-runner-system
 spec:
   hard:
-    pods: "4"
-    requests.cpu: "2"
-    requests.memory: 4Gi
-    # Four image-build runners fit. Each builder requests 500m/1Gi and limits 2 CPU/3.5Gi.
-    limits.cpu: "8"
-    limits.memory: 16Gi
+    pods: "6"
+    requests.cpu: "3"
+    requests.memory: 6Gi
+    # Six runners leave room for short validation jobs alongside image builds.
+    # Each builder requests 500m/1Gi and limits 2 CPU/3.5Gi.
+    limits.cpu: "12"
+    limits.memory: 24Gi
   scopeSelector:
     matchExpressions:
       - scopeName: PriorityClass

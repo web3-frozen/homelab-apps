@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-      - "chore/**"
-      - "renovate/**"
   workflow_dispatch:
 
 permissions:
