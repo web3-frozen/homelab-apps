@@ -22,6 +22,6 @@ images:
 - name: ghcr.io/web3-frozen/demo-inventory
   newName: ghcr.io/web3-frozen/demo-inventory
   newTag: 5fdf0ff
-- name: ghcr.io/web3-frozen/demo-pricing
+- digest: sha256:27699ee120ec86fdd6d42bd24eb7b3216bcfc3c0931c0c0eee7ee311a602e40c
+  name: ghcr.io/web3-frozen/demo-pricing
   newName: ghcr.io/web3-frozen/demo-pricing
-  newTag: 5fdf0ff
