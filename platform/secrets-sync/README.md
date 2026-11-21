@@ -37,3 +37,20 @@ The following classes are intentionally not pushed:
   generated Redis password/admin bootstrap secret. These are ephemeral or
   installation-local state.
 - Secrets already sourced from Infisical through an ExternalSecret.
+
+## Current coverage
+
+Every durable application credential is now either pushed by this app or read
+from Infisical through an ExternalSecret. The remaining direct Secrets fall
+into these buckets:
+
+- `actions-runner-system/ghcr-pull-secret` is byte-identical to the value in
+  `INFRA_GHCR_DOCKERCONFIGJSON`. Pulumi still creates it directly; a follow-up
+  should switch it to an ExternalSecret.
+- Argo CD's Redis password, admin hash/server key, cluster registration secret
+  and the k3s node passwords are bootstrap/installation state. They are
+  regenerated or re-adopted during bootstrap and cannot depend on Infisical
+  being available first.
+- Infisical's own PostgreSQL/Redis passwords and `infisical-secrets`
+  (`AUTH_SECRET`, `ENCRYPTION_KEY`) must be backed up outside Infisical. They
+  are the keys needed to recover Infisical itself.
