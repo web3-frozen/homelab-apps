@@ -15,6 +15,8 @@ spec:
   source:
     repoURL: https://charts.longhorn.io
     chart: longhorn
+    # Longhorn only supports sequential minor upgrades. Automated CVE
+    # remediation must never cross a minor boundary; manual rollout only.
     targetRevision: "1.8.2"
     helm:
       releaseName: longhorn
@@ -46,9 +48,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    # Deliberately manual: Longhorn upgrades are stateful and require a
+    # migration window. Argo CD still retries a sync that a human starts.
     retry:
       limit: 10
       backoff:
