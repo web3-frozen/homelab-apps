@@ -51,16 +51,15 @@ spec:
             summary: "Poll failures for source {{ $labels.source }}"
             description: "Source {{ $labels.source }} has >50% poll failure rate for 5 minutes."
 
-        # Last successful poll >3 minutes ago
+        # Last successful poll more than 10 minutes ago
         - alert: OnchainMonitorPollStale
           expr: |
-            (time() - onchain_monitor_poll_last_success_timestamp) > 180
-          for: 2m
+            (time() - onchain_monitor_poll_last_success_timestamp) > 600
           labels:
             severity: warning
           annotations:
             summary: "Stale data from source {{ $labels.source }}"
-            description: "Source {{ $labels.source }} last polled successfully {{ $value | humanizeDuration }} ago."
+            description: "Source {{ $labels.source }} has not polled successfully for more than 10 minutes (last success {{ $value | humanizeDuration }} ago)."
 
         # p95 HTTP latency >2s for 5 minutes
         - alert: OnchainMonitorHighLatency
