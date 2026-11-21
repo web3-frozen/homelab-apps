@@ -207,6 +207,7 @@ jobs:
           context: ${{ inputs.build-context }}
           file: ${{ inputs.dockerfile }}
           pull: true
+          no-cache: ${{ inputs.baseline_run_id != '' }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
