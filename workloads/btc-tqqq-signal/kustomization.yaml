@@ -2,7 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: btc-tqqq-signal
 resources:
+  - state.yaml
+  - broker-config.yaml
   - external-secret.yaml
+  - binance-external-secret.yaml
+  - telegram-external-secret.yaml
   - cronjob.yaml
   - network-policy.yaml
 images:
