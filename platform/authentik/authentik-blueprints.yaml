@@ -98,33 +98,17 @@ data:
           meta_publisher: Homelab
           open_in_new_tab: true
 
-      - model: authentik_providers_oauth2.oauth2provider
-        id: infisical-provider
+      - model: authentik_providers_proxy.proxyprovider
+        id: infisical-forward-provider
         identifiers:
-          name: infisical
+          name: infisical-forward
         attrs:
-          client_type: confidential
-          client_id: infisical
-          client_secret: !Env AUTHENTIK_INFISICAL_CLIENT_SECRET
           authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
-          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          grant_types:
-            - authorization_code
-            - refresh_token
-          include_claims_in_id_token: true
-          issuer_mode: per_provider
-          sub_mode: hashed_user_id
-          signing_key: !Find [authentik_crypto.certificatekeypair, [name, authentik Self-signed Certificate]]
-          redirect_uris:
-            - matching_mode: strict
-              url: https://infisical.dummysui.monster/api/v1/sso/oidc/callback
-              redirect_uri_type: authorization
-          property_mappings:
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
-            - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
+          external_host: https://infisical.dummysui.monster
+          mode: forward_single
+          intercept_header_auth: true
 
       - model: authentik_core.application
         id: infisical-application
@@ -132,8 +116,16 @@ data:
           slug: infisical
         attrs:
           name: Infisical
-          provider: !KeyOf infisical-provider
+          provider: !KeyOf infisical-forward-provider
           meta_launch_url: https://infisical.dummysui.monster/
           meta_description: Secrets, configuration, and environment management
           meta_publisher: Homelab
           open_in_new_tab: true
+
+      - model: authentik_outposts.outpost
+        id: embedded-outpost
+        identifiers:
+          name: authentik Embedded Outpost
+        attrs:
+          providers:
+            - !KeyOf infisical-forward-provider

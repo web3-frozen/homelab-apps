@@ -12,6 +12,48 @@ spec:
       depth: 1
 ---
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: infisical-forward-auth
+  namespace: authentik
+spec:
+  forwardAuth:
+    address: http://authentik-server.authentik.svc.cluster.local/outpost.goauthentik.io/auth/traefik
+    trustForwardHeader: true
+    maxResponseBodySize: 4194304
+    authResponseHeaders:
+      - X-authentik-username
+      - X-authentik-groups
+      - X-authentik-entitlements
+      - X-authentik-email
+      - X-authentik-name
+      - X-authentik-uid
+      - X-authentik-jwt
+      - X-authentik-meta-jwks
+      - X-authentik-meta-outpost
+      - X-authentik-meta-provider
+      - X-authentik-meta-app
+      - X-authentik-meta-version
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: infisical-auth
+  namespace: authentik
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`infisical.dummysui.monster`) && PathPrefix(`/outpost.goauthentik.io/`)
+      priority: 100
+      middlewares:
+        - name: infisical-ip-allowlist
+      services:
+        - name: authentik-server
+          port: 80
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: infisical
@@ -22,8 +64,10 @@ spec:
   routes:
     - kind: Rule
       match: Host(`infisical.dummysui.monster`)
+      priority: 10
       middlewares:
         - name: infisical-ip-allowlist
+        - name: infisical-forward-auth
       services:
         - name: infisical-infisical-standalone-infisical
           namespace: infisical

@@ -22,10 +22,13 @@ the break-glass path if Authentik is unavailable.
 | `authentik` | n/a | GoAuthentik Helm chart |
 | ArgoCD | `argocd` | `https://argocd.<domain>/auth/callback` |
 | Grafana | `grafana` | `https://grafana.<domain>/login/generic_oauth` |
-| Infisical | `infisical` | `https://infisical.<domain>/api/v1/sso/oidc/callback` |
+| Infisical | n/a (forward auth) | n/a |
 
 The `homelab-sso` blueprint creates all providers and applications.
 `homelab-admins` maps to ArgoCD `role:admin` and Grafana `Admin`.
+Infisical uses an Authentik forward-auth proxy provider because native OIDC SSO
+requires a paid Infisical license and configured SMTP. Traefik sends every
+request through the embedded Authentik outpost before it reaches Infisical.
 
 ## Secrets
 
@@ -37,7 +40,6 @@ All runtime secrets are delivered by External Secrets Operator:
 - `INFRA_AUTHENTIK_BOOTSTRAP_TOKEN`
 - `INFRA_AUTHENTIK_ARGOCD_CLIENT_SECRET`
 - `INFRA_AUTHENTIK_GRAFANA_CLIENT_SECRET`
-- `INFRA_AUTHENTIK_INFISICAL_CLIENT_SECRET`
 
 Never print these values in logs, tickets, or agent output.
 
@@ -68,13 +70,16 @@ curl -I https://auth.<domain>
 curl -I https://argocd.<domain>/auth/login
 curl -I https://grafana.<domain>/login/generic_oauth
 curl -I https://infisical.<domain>
+curl -I https://infisical.<domain>/outpost.goauthentik.io/ping
 ```
+
+An unauthenticated request to Infisical should redirect to Authentik. The
+outpost ping endpoint should return `204` from an allowed source IP.
 
 OIDC discovery:
 
 ```bash
 curl -fsS https://auth.<domain>/application/o/argocd/.well-known/openid-configuration
-curl -fsS https://auth.<domain>/application/o/infisical/.well-known/openid-configuration
 ```
 
 The ArgoCD flow must use PKCE and request the `groups` ID-token claim.
