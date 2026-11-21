@@ -1,0 +1,87 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: btc-tqqq-signal
+spec:
+  schedule: "20 0 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 7200
+  successfulJobsHistoryLimit: 14
+  failedJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: btc-tqqq-signal
+          annotations:
+            linkerd.io/inject: disabled
+        spec:
+          serviceAccountName: btc-tqqq-source-loader
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: fetch-source
+              image: docker.io/library/python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72
+              command: ["python", "-B", "-u", "/bootstrap/fetch_source.py"]
+              env:
+                - name: INFISICAL_IDENTITY_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: btc-tqqq-source-identity
+                      key: INFISICAL_IDENTITY_ID
+                - name: INFISICAL_PROJECT_ID
+                  valueFrom:
+                    configMapKeyRef:
+                      name: btc-tqqq-source-identity
+                      key: INFISICAL_PROJECT_ID
+              resources:
+                requests: {cpu: 25m, memory: 32Mi}
+                limits: {cpu: 250m, memory: 96Mi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              volumeMounts:
+                - {name: bootstrap, mountPath: /bootstrap, readOnly: true}
+                - {name: identity-token, mountPath: /var/run/infisical, readOnly: true}
+                - {name: source, mountPath: /app}
+          containers:
+            - name: signals
+              image: docker.io/library/python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72
+              command: ["python", "-B", "-u", "/app/signal_monitor.py"]
+              resources:
+                requests: {cpu: 25m, memory: 32Mi}
+                limits: {cpu: 250m, memory: 128Mi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              volumeMounts:
+                - {name: source, mountPath: /app, readOnly: true}
+          volumes:
+            - name: bootstrap
+              configMap:
+                name: btc-tqqq-source-loader
+            - name: identity-token
+              projected:
+                defaultMode: 0440
+                sources:
+                  - serviceAccountToken:
+                      audience: infisical
+                      expirationSeconds: 600
+                      path: token
+            - name: source
+              emptyDir:
+                medium: Memory
+                sizeLimit: 4Mi
