@@ -53,9 +53,12 @@ spec:
 
         # No successful poll for 10 continuous minutes
         - alert: OnchainMonitorPollStale
+          # The metric is a Unix timestamp, so compare the age against 600s.
+          # Comparing against 0 fired after any 10-minute-old series, even
+          # when the last success was only 20-200s ago.
           expr: |
-            (time() - onchain_monitor_poll_last_success_timestamp) > 0
-          for: 10m
+            (time() - onchain_monitor_poll_last_success_timestamp) > 600
+          for: 1m
           labels:
             severity: warning
           annotations:
