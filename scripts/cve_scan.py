@@ -64,6 +64,10 @@ def scan_image(
         severity,
         "--quiet",
         "--no-progress",
+        "--image-src",
+        "remote",
+        "--parallel",
+        "1",
     ]
     if cache_dir is not None:
         command += ["--cache-dir", str(cache_dir)]

@@ -92,6 +92,8 @@ def test_scan_uses_isolated_cache_and_skips_db_updates(monkeypatch, tmp_path: Pa
     )
     command = captured["command"]
     assert command[command.index("--cache-dir") + 1] == str(tmp_path)
+    assert command[command.index("--image-src") + 1] == "remote"
+    assert command[command.index("--parallel") + 1] == "1"
     assert "--skip-db-update" in command
     assert "--skip-java-db-update" in command
     assert "error" not in result
