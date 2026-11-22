@@ -4,7 +4,7 @@ metadata:
   name: btc-tqqq-broker-config
 data:
   # Flow A is the separate Binance + Webull sleeves.
-  FLOW_A_ENABLED: "true"
+  FLOW_A_ENABLED: "false"
   # Flow B is enabled in live mode. Test mode planned orders but never
   # submitted them; review the safety ceilings before the next Monday run.
   FLOW_B_ENABLED: "true"
