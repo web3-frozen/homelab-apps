@@ -13,10 +13,17 @@ from pathlib import Path
 
 
 DEFAULT_SKIP_PREFIXES = ("ghcr.io/web3-frozen/",)
+RATE_LIMIT_MARKERS = ("toomanyrequests", "rate limit")
 
 
 def should_skip(image: str, skip_prefixes: tuple[str, ...]) -> bool:
     return image.startswith(skip_prefixes)
+
+
+def is_rate_limited(detail: str) -> bool:
+    """Registry throttling is transient and must not fail manifest validation."""
+    lowered = detail.lower()
+    return any(marker in lowered for marker in RATE_LIMIT_MARKERS)
 
 
 def check_image(crane: str, image: str, retries: int = 3) -> tuple[str, bool, str]:
@@ -70,6 +77,7 @@ def main() -> int:
     skipped = [image for image in images if should_skip(image, skip_prefixes)]
 
     failures: list[tuple[str, str]] = []
+    rate_limited: list[tuple[str, str]] = []
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
         futures = {
             executor.submit(check_image, args.crane, image): image
@@ -79,13 +87,17 @@ def main() -> int:
             image, ok, detail = future.result()
             if ok:
                 print(f"OK   {image} -> {detail}")
+            elif is_rate_limited(detail):
+                print(f"WARN {image}: registry rate limit; skipped", file=sys.stderr)
+                rate_limited.append((image, detail))
             else:
                 print(f"FAIL {image}: {detail}", file=sys.stderr)
                 failures.append((image, detail))
 
     print(
-        f"validated={len(checked) - len(failures)} "
-        f"failed={len(failures)} skipped_private={len(skipped)}"
+        f"validated={len(checked) - len(failures) - len(rate_limited)} "
+        f"failed={len(failures)} rate_limited={len(rate_limited)} "
+        f"skipped_private={len(skipped)}"
     )
     return 1 if failures else 0
 

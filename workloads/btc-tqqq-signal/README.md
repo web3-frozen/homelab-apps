@@ -52,11 +52,12 @@ Bitget requires these Infisical keys:
 - `BTC_TQQQ_BITGET_API_SECRET`
 - `BTC_TQQQ_BITGET_API_PASSPHRASE`
 
-To enable Flow B, create an ExternalSecret that maps those three keys to
-`BITGET_API_KEY`, `BITGET_API_SECRET` and `BITGET_API_PASSPHRASE` in the
-`btc-tqqq-bitget` Secret, run a one-off Bitget probe, then set
-`BITGET_EXECUTION_MODE=test` and `FLOW_B_ENABLED=true`. Change the mode to
-`live` only after the probe and test order have been reviewed.
+`bitget-external-secret.yaml` maps those three keys to `BITGET_API_KEY`,
+`BITGET_API_SECRET` and `BITGET_API_PASSPHRASE` in the `btc-tqqq-bitget`
+Secret. Flow B is enabled in `test` mode: the job validates and reports the
+orders it would place but never submits them. Change
+`BITGET_EXECUTION_MODE` to `live` only after the probe and a scheduled test
+run have been reviewed.
 
 Verified builds on master in web3-frozen/btc-tqqq-signal submit image digest
 updates as GitOps pull requests. GitHub merges the update after its checks
@@ -76,5 +77,14 @@ Check Binance connectivity without creating an order:
 kubectl -n btc-tqqq-signal create job --from=cronjob/btc-tqqq-binance \
   btc-tqqq-binance-probe --dry-run=client -o json \
   | jq '.spec.template.spec.containers[0].command = ["python", "-B", "-u", "/app/trade.py", "--brokers", "binance", "--probe", "--state-dir", "/var/lib/btc-tqqq"]' \
+  | kubectl apply -f -
+```
+
+Check Bitget connectivity without creating an order:
+
+```bash
+kubectl -n btc-tqqq-signal create job --from=cronjob/btc-tqqq-bitget \
+  btc-tqqq-bitget-probe --dry-run=client -o json \
+  | jq '.spec.template.spec.containers[0].command = ["python", "-B", "-u", "/app/trade.py", "--brokers", "bitget", "--probe", "--state-dir", "/var/lib/btc-tqqq"]' \
   | kubectl apply -f -
 ```
