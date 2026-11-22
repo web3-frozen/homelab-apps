@@ -68,16 +68,16 @@ spec:
             description: "Source {{ $labels.source }} has not polled successfully for 10 continuous minutes (last success {{ $value | humanizeDuration }} ago)."
 
         # Turtle can be blocked by Cloudflare for long stretches. Only alert
-        # after 30 minutes without a success, sustained for 5 minutes.
+        # after 2 hours without a success, sustained for 15 minutes.
         - alert: OnchainMonitorPollStaleTurtle
           expr: |
-            (time() - onchain_monitor_poll_last_success_timestamp{source="turtle"}) > 1800
-          for: 5m
+            (time() - onchain_monitor_poll_last_success_timestamp{source="turtle"}) > 7200
+          for: 15m
           labels:
             severity: warning
           annotations:
             summary: "Stale data from source turtle"
-            description: "Source turtle has not polled successfully for 30 continuous minutes (last success {{ $value | humanizeDuration }} ago)."
+            description: "Source turtle has not polled successfully for 2 continuous hours (last success {{ $value | humanizeDuration }} ago)."
 
         # p95 HTTP latency >2s for 5 minutes
         - alert: OnchainMonitorHighLatency
