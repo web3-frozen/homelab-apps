@@ -158,6 +158,11 @@ spec:
               ],
               "packageRules": [
                 {
+                  "matchDatasources": ["docker"],
+                  "matchPackageNames": ["ghcr.io/web3-frozen/btc-tqqq-signal"],
+                  "enabled": false
+                },
+                {
                   "matchUpdateTypes": ["minor", "patch"],
                   "excludePackageNames": ["longhorn"],
                   "groupName": "non-major dependencies",
