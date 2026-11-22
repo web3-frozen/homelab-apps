@@ -6,6 +6,7 @@ resources:
 - broker-config.yaml
 - external-secret.yaml
 - binance-external-secret.yaml
+- bitget-external-secret.yaml
 - webull-external-secret.yaml
 - telegram-external-secret.yaml
 - cronjob.yaml
