@@ -12,8 +12,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import queue
 import subprocess
 import sys
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +51,9 @@ def scan_image(
     severity: str,
     timeout: int,
     workload_context: list[dict[str, Any]] | None = None,
+    cache_dir: Path | None = None,
+    skip_db_update: bool = False,
+    skip_java_db_update: bool = False,
 ) -> dict[str, Any]:
     command = [
         trivy,
@@ -59,8 +64,14 @@ def scan_image(
         severity,
         "--quiet",
         "--no-progress",
-        image,
     ]
+    if cache_dir is not None:
+        command += ["--cache-dir", str(cache_dir)]
+    if skip_db_update:
+        command.append("--skip-db-update")
+    if skip_java_db_update:
+        command.append("--skip-java-db-update")
+    command.append(image)
     try:
         result = subprocess.run(
             command,
@@ -238,6 +249,34 @@ def build_sarif(report: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _make_worker_caches(
+    db_cache_dir: Path, workers: int
+) -> tuple[list[Path], tempfile.TemporaryDirectory, bool]:
+    """Create isolated fs caches that share one warm, read-only Trivy DB.
+
+    Trivy takes an exclusive lock on its fs cache. Parallel processes pointed at
+    the same ``--cache-dir`` fail with ``cache may be in use by another
+    process``. Each worker therefore gets its own fs cache, while ``db`` is a
+    symlink to the single warm database so the ~1.7 GiB DB is not copied.
+    """
+    temp = tempfile.TemporaryDirectory(prefix="trivy-scan-")
+    shared_db = (db_cache_dir / "db").resolve()
+    shared_java_db = (db_cache_dir / "java-db").resolve()
+    caches: list[Path] = []
+    try:
+        for index in range(workers):
+            worker = Path(temp.name) / f"worker-{index}"
+            worker.mkdir()
+            (worker / "db").symlink_to(shared_db, target_is_directory=True)
+            if shared_java_db.is_dir():
+                (worker / "java-db").symlink_to(shared_java_db, target_is_directory=True)
+            caches.append(worker)
+    except OSError:
+        temp.cleanup()
+        raise
+    return caches, temp, shared_java_db.is_dir()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--images", type=Path)
@@ -246,6 +285,11 @@ def main() -> int:
     parser.add_argument("--severity", default=DEFAULT_SEVERITY)
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--db-cache-dir",
+        type=Path,
+        help="Warm Trivy cache created with --download-db-only; required for parallel scans",
+    )
     parser.add_argument(
         "--repository",
         action="append",
@@ -262,21 +306,72 @@ def main() -> int:
         args.images, args.inventory, {item for item in args.repository if item}
     )
 
-    results: list[dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
-        futures = {
-            executor.submit(
-                scan_image,
+    workers = max(1, args.workers)
+    cache_dirs: list[Path | None] = [None]
+    skip_db_update = False
+    skip_java_db_update = False
+    temp_cache = None
+    if args.db_cache_dir is not None:
+        db_cache = args.db_cache_dir.expanduser().resolve()
+        if not (db_cache / "db" / "trivy.db").is_file():
+            parser.error(
+                f"--db-cache-dir {db_cache} is missing db/trivy.db; run: "
+                f"trivy image --download-db-only --cache-dir {db_cache}"
+            )
+        skip_db_update = True
+        if workers == 1:
+            cache_dirs = [db_cache]
+            skip_java_db_update = (db_cache / "java-db").is_dir()
+        else:
+            try:
+                cache_dirs, temp_cache, has_java_db = _make_worker_caches(db_cache, workers)
+            except OSError as exc:
+                print(
+                    f"WARN cannot create isolated Trivy caches ({exc}); serializing scans",
+                    file=sys.stderr,
+                )
+                workers = 1
+                cache_dirs = [db_cache]
+                skip_java_db_update = (db_cache / "java-db").is_dir()
+            else:
+                skip_java_db_update = has_java_db
+    elif workers > 1:
+        print(
+            "WARN --workers > 1 needs --db-cache-dir to isolate the Trivy fs cache; "
+            "running with one worker",
+            file=sys.stderr,
+        )
+        workers = 1
+
+    cache_pool: queue.Queue[Path | None] = queue.Queue()
+    for cache in cache_dirs:
+        cache_pool.put(cache)
+
+    def scan_with_cache(image: str) -> dict[str, Any]:
+        cache = cache_pool.get()
+        try:
+            return scan_image(
                 args.trivy,
                 image,
                 args.severity,
                 args.timeout,
                 contexts.get(image, []),
-            ): image
-            for image in images
-        }
-        for future in as_completed(futures):
-            results.append(future.result())
+                cache_dir=cache,
+                skip_db_update=skip_db_update,
+                skip_java_db_update=skip_java_db_update,
+            )
+        finally:
+            cache_pool.put(cache)
+
+    results: list[dict[str, Any]] = []
+    try:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = [executor.submit(scan_with_cache, image) for image in images]
+            for future in as_completed(futures):
+                results.append(future.result())
+    finally:
+        if temp_cache is not None:
+            temp_cache.cleanup()
 
     results.sort(key=lambda item: item["image"])
     successful = [item for item in results if not item.get("error")]

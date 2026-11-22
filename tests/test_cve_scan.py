@@ -71,6 +71,78 @@ def test_inventory_scan_filters_by_repository(tmp_path: Path) -> None:
     assert images == ["nginx:1"]
 
 
+def test_scan_uses_isolated_cache_and_skips_db_updates(monkeypatch, tmp_path: Path) -> None:
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        return subprocess.CompletedProcess(
+            command, 0, stdout=json.dumps({"Results": []}), stderr=""
+        )
+
+    monkeypatch.setattr(cve_scan.subprocess, "run", fake_run)
+    result = cve_scan.scan_image(
+        "trivy",
+        "nginx:1",
+        "HIGH",
+        10,
+        cache_dir=tmp_path,
+        skip_db_update=True,
+        skip_java_db_update=True,
+    )
+    command = captured["command"]
+    assert command[command.index("--cache-dir") + 1] == str(tmp_path)
+    assert "--skip-db-update" in command
+    assert "--skip-java-db-update" in command
+    assert "error" not in result
+
+
+def test_worker_caches_share_db_and_isolate_fanal(tmp_path: Path) -> None:
+    db_cache = tmp_path / "db-cache"
+    (db_cache / "db").mkdir(parents=True)
+    (db_cache / "db" / "trivy.db").write_bytes(b"database")
+
+    caches, temp_cache, has_java_db = cve_scan._make_worker_caches(db_cache, 3)
+    try:
+        assert len(caches) == 3
+        assert len({str(cache) for cache in caches}) == 3
+        assert not has_java_db
+        for cache in caches:
+            assert (cache / "db" / "trivy.db").read_bytes() == b"database"
+            assert (cache / "db").is_symlink()
+    finally:
+        temp_cache.cleanup()
+
+
+def test_parallel_scan_without_db_cache_serializes(tmp_path: Path, monkeypatch, capfd) -> None:
+    trivy = tmp_path / "trivy"
+    trivy.write_text("#!/bin/sh\necho '{\"Results\": []}'\n", encoding="utf-8")
+    trivy.chmod(0o755)
+    images = tmp_path / "images.txt"
+    images.write_text("nginx:1\nredis:1\n", encoding="utf-8")
+    report = tmp_path / "report.json"
+    sarif = tmp_path / "report.sarif"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "cve_scan.py",
+            "--images",
+            str(images),
+            "--trivy",
+            str(trivy),
+            "--report",
+            str(report),
+            "--sarif",
+            str(sarif),
+            "--workers",
+            "2",
+        ],
+    )
+    assert cve_scan.main() == 0
+    assert "--workers > 1 needs --db-cache-dir" in capfd.readouterr().err
+
+
 def test_scan_main_returns_nonzero_when_an_image_fails(tmp_path: Path, monkeypatch) -> None:
     trivy = tmp_path / "trivy"
     trivy.write_text("#!/bin/sh\necho 'registry unavailable' >&2\nexit 1\n", encoding="utf-8")
