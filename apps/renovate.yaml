@@ -138,6 +138,7 @@ spec:
                 "web3-frozen/btc-tqqq-signal"
               ],
               "dependencyDashboard": true,
+              "dependencyDashboardAutoclose": true,
               "automerge": false,
               "platformAutomerge": false,
               "prConcurrentLimit": 5,
