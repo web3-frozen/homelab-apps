@@ -7,3 +7,24 @@ resources:
   - services.yaml
   - ingress.yaml
   - network-policy.yaml
+images:
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/adservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/cartservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/checkoutservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/currencyservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/emailservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/frontend
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/paymentservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/productcatalogservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/recommendationservice
+    newTag: v0.10.7
+  - name: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo/shippingservice
+    newTag: v0.10.7
