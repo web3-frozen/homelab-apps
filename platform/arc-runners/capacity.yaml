@@ -14,13 +14,14 @@ metadata:
   namespace: actions-runner-system
 spec:
   hard:
-    pods: "6"
-    requests.cpu: "3"
-    requests.memory: 6Gi
-    # Six runners leave room for short validation jobs alongside image builds.
+    pods: "12"
+    requests.cpu: "6"
+    requests.memory: 12Gi
+    # 12 slots: SiteSight may use up to 10 (scale set max), leaving two for a
+    # short validation/refresh job from any other repository.
     # Each builder requests 500m/1Gi and limits 2 CPU/3.5Gi.
-    limits.cpu: "12"
-    limits.memory: 24Gi
+    limits.cpu: "24"
+    limits.memory: 44Gi
   scopeSelector:
     matchExpressions:
       - scopeName: PriorityClass
