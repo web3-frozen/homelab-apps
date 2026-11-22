@@ -11,8 +11,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: validate-gitops-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # The job-local API server is CPU-heavy. Run one validation at a time so
+  # concurrent PRs do not starve each other's etcd and hit request timeouts.
+  group: validate-gitops
+  cancel-in-progress: false
 
 jobs:
   validate:
