@@ -41,6 +41,19 @@ spec:
     helm:
       valuesObject:
         fullnameOverride: renovate
+        # The GitHub App installation token cannot read GHCR packages. Use the
+        # shared read:packages PAT from Infisical so Renovate can resolve
+        # private web3-frozen image digests.
+        envList:
+          - name: RENOVATE_DETECT_HOST_RULES_FROM_ENV
+            value: "true"
+          - name: RENOVATE_DOCKER_GHCR_IO_USERNAME
+            value: web3-frozen
+          - name: RENOVATE_DOCKER_GHCR_IO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: renovate-ghcr
+                key: token
         image:
           tag: "44.238.0"
         pod:
