@@ -319,22 +319,18 @@ def main() -> int:
                 f"trivy image --download-db-only --cache-dir {db_cache}"
             )
         skip_db_update = True
-        if workers == 1:
+        try:
+            cache_dirs, temp_cache, has_java_db = _make_worker_caches(db_cache, workers)
+        except OSError as exc:
+            print(
+                f"WARN cannot create isolated Trivy caches ({exc}); serializing scans",
+                file=sys.stderr,
+            )
+            workers = 1
             cache_dirs = [db_cache]
             skip_java_db_update = (db_cache / "java-db").is_dir()
         else:
-            try:
-                cache_dirs, temp_cache, has_java_db = _make_worker_caches(db_cache, workers)
-            except OSError as exc:
-                print(
-                    f"WARN cannot create isolated Trivy caches ({exc}); serializing scans",
-                    file=sys.stderr,
-                )
-                workers = 1
-                cache_dirs = [db_cache]
-                skip_java_db_update = (db_cache / "java-db").is_dir()
-            else:
-                skip_java_db_update = has_java_db
+            skip_java_db_update = has_java_db
     elif workers > 1:
         print(
             "WARN --workers > 1 needs --db-cache-dir to isolate the Trivy fs cache; "
