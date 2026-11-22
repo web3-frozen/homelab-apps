@@ -13,6 +13,6 @@ resources:
 - cronjob.yaml
 - network-policy.yaml
 images:
-- digest: sha256:f4a57df56ce416011b0ca2dc5f395ce4bffcd703f825d0cb4c670a54a9865d29
+- digest: sha256:22821a9eb58c0ab6c93ae139a04c829b4ddb35d886d72f64eda5d7c2d29d622f
   name: ghcr.io/web3-frozen/btc-tqqq-signal
   newName: ghcr.io/web3-frozen/btc-tqqq-signal
