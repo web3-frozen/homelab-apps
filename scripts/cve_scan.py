@@ -283,7 +283,7 @@ def main() -> int:
     parser.add_argument("--inventory", type=Path)
     parser.add_argument("--trivy", default="trivy")
     parser.add_argument("--severity", default=DEFAULT_SEVERITY)
-    parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument(
         "--db-cache-dir",
