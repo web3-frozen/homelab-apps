@@ -126,17 +126,10 @@ data:
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
             - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-offline_access]]
 
-      - model: authentik_core.application
-        id: infisical-oidc-application
-        identifiers:
-          slug: infisical-oidc
-        attrs:
-          name: Infisical OIDC
-          provider: !KeyOf infisical-oidc-provider
-          meta_launch_url: https://infisical.dummysui.monster/
-          meta_description: OIDC login for Infisical
-          meta_publisher: Homelab
-          open_in_new_tab: true
+      # Keep the OIDC provider above: Infisical's own SSO login callback uses
+      # it. The matching launcher application is intentionally omitted because
+      # the forward-auth "Infisical" application below is the only tile users
+      # need; both previously pointed at the same URL.
 
       - model: authentik_providers_proxy.proxyprovider
         id: infisical-forward-provider
