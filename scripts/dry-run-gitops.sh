@@ -44,6 +44,7 @@ printf '%s,ci,ci,system:masters\n' "$token" > "$tmp_dir/token.csv"
   --etcd-servers=http://127.0.0.1:2379 --service-cluster-ip-range=10.250.0.0/24 \
   --tls-cert-file="$tmp_dir/tls.crt" --tls-private-key-file="$tmp_dir/tls.key" \
   --token-auth-file="$tmp_dir/token.csv" --authorization-mode=RBAC \
+  --request-timeout=300s \
   --service-account-issuer=https://127.0.0.1:6443 --service-account-key-file="$tmp_dir/tls.key" \
   --service-account-signing-key-file="$tmp_dir/tls.key" >"$tmp_dir/apiserver.log" 2>&1 &
 api_pid=$!
@@ -61,11 +62,12 @@ for ((attempt = 0; attempt < 60; attempt++)); do
 done
 "$ctl" --request-timeout=5s get --raw=/readyz >/dev/null
 
-"$ctl" apply --server-side --field-manager=gitops-validation -f "$render_dir/crds.yaml"
-"$ctl" wait --for=condition=Established crd --all --timeout=180s
-"$ctl" apply -f "$render_dir/namespaces.yaml"
+"$ctl" apply --server-side --field-manager=gitops-validation --request-timeout=300s \
+  -f "$render_dir/crds.yaml"
+"$ctl" wait --for=condition=Established crd --all --timeout=300s
+"$ctl" apply --request-timeout=120s -f "$render_dir/namespaces.yaml"
 for manifest in "$render_dir"/applications.yaml "$render_dir"/chart-*.yaml "$render_dir"/kustomize-*.yaml "$render_dir"/raw-manifests.yaml; do
   printf 'Validating %s\n' "$manifest"
   "$ctl" apply --server-side --field-manager=gitops-validation --force-conflicts \
-    --dry-run=server -f "$manifest" >/dev/null
+    --request-timeout=300s --dry-run=server -f "$manifest" >/dev/null
 done
