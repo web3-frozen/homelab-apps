@@ -51,19 +51,33 @@ spec:
             summary: "Poll failures for source {{ $labels.source }}"
             description: "Source {{ $labels.source }} has >50% poll failure rate for 5 minutes."
 
-        # No successful poll for 10 continuous minutes
+        # No successful poll for 10 continuous minutes. Turtle is excluded
+        # here because Cloudflare intermittently blocks it while the source
+        # usually recovers on its own.
         - alert: OnchainMonitorPollStale
           # The metric is a Unix timestamp, so compare the age against 600s.
           # Comparing against 0 fired after any 10-minute-old series, even
           # when the last success was only 20-200s ago.
           expr: |
-            (time() - onchain_monitor_poll_last_success_timestamp) > 600
+            (time() - onchain_monitor_poll_last_success_timestamp{source!="turtle"}) > 600
           for: 1m
           labels:
             severity: warning
           annotations:
             summary: "Stale data from source {{ $labels.source }}"
             description: "Source {{ $labels.source }} has not polled successfully for 10 continuous minutes (last success {{ $value | humanizeDuration }} ago)."
+
+        # Turtle can be blocked by Cloudflare for long stretches. Only alert
+        # after 30 minutes without a success, sustained for 5 minutes.
+        - alert: OnchainMonitorPollStaleTurtle
+          expr: |
+            (time() - onchain_monitor_poll_last_success_timestamp{source="turtle"}) > 1800
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Stale data from source turtle"
+            description: "Source turtle has not polled successfully for 30 continuous minutes (last success {{ $value | humanizeDuration }} ago)."
 
         # p95 HTTP latency >2s for 5 minutes
         - alert: OnchainMonitorHighLatency
