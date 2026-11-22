@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arc-private-homelab-apps-security
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+    path: .
+    targetRevision: "0.15.1"
+    helm:
+      releaseName: arc-private-homelab-apps-security
+      valuesObject:
+        githubConfigUrl: https://github.com/web3-frozen/homelab-apps-security
+        githubConfigSecret: controller-manager
+        runnerScaleSetName: homelab-security
+        minRunners: 0
+        maxRunners: 2
+        controllerServiceAccount:
+          namespace: actions-runner-system
+          name: arc-gha-rs-controller
+        template:
+          metadata:
+            labels:
+              ci.homelab/isolated-runner: "true"
+          spec:
+            automountServiceAccountToken: false
+            priorityClassName: homelab-ci
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: node-role.kubernetes.io/control-plane
+                          operator: DoesNotExist
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1001
+              runAsGroup: 1001
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: runner
+                image: ghcr.io/actions/actions-runner:2.338.2@sha256:6d0b2d80d80f143f77dcb676e50920100bbb547e39e883454d57f45ab8c31300
+                command: ["/home/runner/run.sh"]
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop: [ALL]
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 512Mi
+                  limits:
+                    cpu: "1"
+                    memory: 2Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
