@@ -460,7 +460,8 @@ def main() -> int:
     rendered = rendered_inventory(args.render_dir, args.root)
     live = live_inventory(args.live_json) if args.live_json else []
     records, drift = merge_inventory(rendered, live)
-    if not args.live_json:
+    # An empty or missing live capture is not informative enough to flag drift.
+    if not args.live_json or not live:
         drift = []
     output = {
         "inventory_version": 1,
