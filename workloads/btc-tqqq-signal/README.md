@@ -13,10 +13,11 @@ independently gated flows:
 | A | `btc-tqqq-binance`, `btc-tqqq-webull` | `FLOW_A_ENABLED` |
 | B | `btc-tqqq-bitget` | `FLOW_B_ENABLED` |
 
-- `btc-tqqq-binance` runs on Monday at 08:20 HKT in live mode.
-- `btc-tqqq-webull` runs before each US regular-session open. The model skips
-  days that are not its weekly execution window. It runs in live mode using
-  credentials from Infisical.
+- `btc-tqqq-binance` runs on Monday at 08:20 HKT and exits without evaluating
+  market data while Flow A is disabled.
+- `btc-tqqq-webull` runs before each US regular-session open and also exits
+  while Flow A is disabled. When enabled, the model skips days that are not its
+  weekly execution window and uses credentials from Infisical.
 - `btc-tqqq-bitget` runs shortly after the Monday US regular-session open at
   22:35 HKT. The dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT` in live
   mode using credentials from Infisical.
