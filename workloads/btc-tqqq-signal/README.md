@@ -13,14 +13,14 @@ independently gated flows:
 | A | `btc-tqqq-binance`, `btc-tqqq-webull` | `FLOW_A_ENABLED` |
 | B | `btc-tqqq-bitget` | `FLOW_B_ENABLED` |
 
-- `btc-tqqq-binance` runs on Monday at 08:20 HKT in live mode.
-- `btc-tqqq-webull` runs before each US regular-session open. The model skips
-  days that are not its weekly execution window. It runs in live mode using
-  credentials from Infisical.
+- `btc-tqqq-binance` runs on Monday at 08:20 HKT and exits without evaluating
+  market data while Flow A is disabled.
+- `btc-tqqq-webull` runs before each US regular-session open and also exits
+  while Flow A is disabled. When enabled, the model skips days that are not its
+  weekly execution window and uses credentials from Infisical.
 - `btc-tqqq-bitget` runs shortly after the Monday US regular-session open at
-  22:35 HKT. The dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT`. Flow B
-  and Bitget execution stay disabled until its credentials and a sync test are
-  complete.
+  22:35 HKT. The dedicated sleeve trades both `BTCUSDT` and `RTQQQUSDT` in live
+  mode using credentials from Infisical.
 
 All CronJob schedules use `Asia/Hong_Kong`. US-market-aligned hours need review
 when US daylight-saving time changes.
@@ -54,10 +54,8 @@ Bitget requires these Infisical keys:
 
 `bitget-external-secret.yaml` maps those three keys to `BITGET_API_KEY`,
 `BITGET_API_SECRET` and `BITGET_API_PASSPHRASE` in the `btc-tqqq-bitget`
-Secret. Flow B is enabled in `test` mode: the job validates and reports the
-orders it would place but never submits them. Change
-`BITGET_EXECUTION_MODE` to `live` only after the probe and a scheduled test
-run have been reviewed.
+Secret. Flow B runs in `live` mode. Keep `BITGET_MAX_ORDER_USD`,
+`BITGET_MAX_SLEEVE_USD` and the weekly schedule under review.
 
 ## Trade ledger and report
 
@@ -113,3 +111,11 @@ kubectl -n btc-tqqq-signal create job --from=cronjob/btc-tqqq-bitget \
   | jq '.spec.template.spec.containers[0].command = ["python", "-B", "-u", "/app/trade.py", "--brokers", "bitget", "--probe", "--state-dir", "/var/lib/btc-tqqq"]' \
   | kubectl apply -f -
 ```
+
+### Hosted report
+
+`report-server.yaml` runs a small read-only server that refreshes
+`btc-tqqq/latest/report.html` from R2 every 60 seconds. The stable URL is
+<https://btc-tqqq.dummysui.monster/>, restricted to `221.124.77.37/32` by the
+`btc-tqqq-report-ip-allowlist` Traefik middleware. The daily snapshot job
+overwrites the R2 object, so the URL does not change.

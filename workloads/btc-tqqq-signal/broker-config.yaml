@@ -4,9 +4,9 @@ metadata:
   name: btc-tqqq-broker-config
 data:
   # Flow A is the separate Binance + Webull sleeves.
-  FLOW_A_ENABLED: "true"
-  # Flow B is enabled in validation-only mode. Test mode plans orders but
-  # never submits them; switch BITGET_EXECUTION_MODE to live after review.
+  FLOW_A_ENABLED: "false"
+  # Flow B is enabled in live mode. Test mode planned orders but never
+  # submitted them; review the safety ceilings before the next Monday run.
   FLOW_B_ENABLED: "true"
   BINANCE_SPOT_SYMBOL: BTCUSDT
   BINANCE_EXECUTION_MODE: live
@@ -17,7 +17,7 @@ data:
   WEBULL_MAX_ORDER_USD: "10000"
   WEBULL_MAX_SLEEVE_USD: "20000"
   WEBULL_LIMIT_SLIPPAGE_BPS: "100"
-  BITGET_EXECUTION_MODE: test
+  BITGET_EXECUTION_MODE: live
   BITGET_BTC_SYMBOL: BTCUSDT
   BITGET_TQQQ_SYMBOL: RTQQQUSDT
   BITGET_MAX_ORDER_USD: "10000"

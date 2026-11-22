@@ -11,6 +11,7 @@ resources:
 - webull-external-secret.yaml
 - telegram-external-secret.yaml
 - cronjob.yaml
+- report-server.yaml
 - network-policy.yaml
 images:
 - digest: sha256:22821a9eb58c0ab6c93ae139a04c829b4ddb35d886d72f64eda5d7c2d29d622f
