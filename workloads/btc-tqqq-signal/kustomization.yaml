@@ -7,6 +7,7 @@ resources:
 - external-secret.yaml
 - binance-external-secret.yaml
 - bitget-external-secret.yaml
+- cloudflare-external-secret.yaml
 - webull-external-secret.yaml
 - telegram-external-secret.yaml
 - cronjob.yaml

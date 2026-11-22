@@ -59,6 +59,31 @@ orders it would place but never submits them. Change
 `BITGET_EXECUTION_MODE` to `live` only after the probe and a scheduled test
 run have been reviewed.
 
+## Trade ledger and report
+
+`cloudflare-external-secret.yaml` mirrors the shared Cloudflare credentials
+from Infisical into the `cloudflare-shared` Secret. The bot uses them for:
+
+- D1 tables `btc_tqqq_orders`, `btc_tqqq_snapshots`, `btc_tqqq_cashflows`
+- R2 objects under `btc-tqqq/latest/` (`report.html`, CSV and JSON)
+
+The Bitget executor records live orders, daily equity and USDT deposits in
+`/var/lib/btc-tqqq/bitget.sqlite3`. The `btc-tqqq-bitget-snapshot` CronJob runs
+daily at 08:05 HKT and:
+
+1. Reads spot, flexible savings and both market prices.
+2. Records a daily equity snapshot and syncs recent USDT deposits.
+3. Mirrors the ledger to D1.
+4. Generates a self-contained HTML report with total invested, equity, P&L,
+   ROI, TWR, Sharpe, max drawdown, allocation, trades and cashflows.
+5. Uploads the report and CSV/JSON exports to R2 and prints a seven-day
+   presigned report URL.
+
+When Flow B needs cash to buy, it redeems only the shortfall from Bitget
+flexible savings. Bitget returns flexible redemptions to the spot account; the
+bot also supports a `p2p -> spot` transfer if a product credits funding
+instead.
+
 Verified builds on master in web3-frozen/btc-tqqq-signal submit image digest
 updates as GitOps pull requests. GitHub merges the update after its checks
 pass and Argo CD applies the new digest.
