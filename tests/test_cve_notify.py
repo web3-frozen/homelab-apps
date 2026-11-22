@@ -55,6 +55,16 @@ def test_issue_is_one_per_workload_and_has_stable_marker() -> None:
     assert "CVE-2026-86144" in body
 
 
+def test_summary_mode_creates_one_repository_summary_issue() -> None:
+    records = issue_records(report(), summary=True)
+    assert len(records) == 1
+    assert issue_title(records[0]) == "[CVE] Daily scan summary"
+    body = render_issue_body(records[0])
+    assert decode_issue_key(body) == "summary|homelab-apps"
+    assert "ghcr.io/web3-frozen/demo-frontend" in body
+    assert "CVE-2026-86144" not in body
+
+
 def test_summary_mentions_fixable_critical_counts() -> None:
     text = summary_text(report(), {"bumps": [{}], "rebuilds": [{}], "alerts": []})
     assert "Affected images: 1" in text

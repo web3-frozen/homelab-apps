@@ -34,7 +34,19 @@ def decode_issue_key(text: str) -> str | None:
     return base64.urlsafe_b64decode(token + "=" * (-len(token) % 4)).decode("utf-8")
 
 
-def issue_records(report: dict[str, Any]) -> list[dict[str, Any]]:
+def issue_records(
+    report: dict[str, Any], summary: bool = False
+) -> list[dict[str, Any]]:
+    if summary:
+        return [
+            {
+                "key": "summary|homelab-apps",
+                "summary": True,
+                "repository": "summary",
+                "report": report,
+                "vulnerabilities": [],
+            }
+        ]
     records: list[dict[str, Any]] = []
     for image in report.get("images") or []:
         workloads = image.get("workloads") or [None]
@@ -53,6 +65,8 @@ def issue_records(report: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def issue_title(record: dict[str, Any]) -> str:
+    if record.get("summary"):
+        return "[CVE] Daily scan summary"
     workload = record.get("workload") or {}
     suffix = f"::{workload.get('container')}" if workload.get("container") else ""
     if workload:
@@ -66,7 +80,60 @@ def issue_title(record: dict[str, Any]) -> str:
     return title[:240]
 
 
+def render_summary_body(record: dict[str, Any]) -> str:
+    report = record.get("report") or {}
+    repositories: dict[str, dict[str, int]] = {}
+    for image in report.get("images") or []:
+        repo = str(
+            image.get("repository") or repository(str(image.get("image", "")))
+        )
+        entry = repositories.setdefault(
+            repo, {"images": 0, "critical": 0, "high": 0, "fixable": 0}
+        )
+        entry["images"] += 1
+        for vuln in image.get("vulnerabilities") or []:
+            severity = str(vuln.get("severity", "")).upper()
+            if severity == "CRITICAL":
+                entry["critical"] += 1
+            elif severity == "HIGH":
+                entry["high"] += 1
+            if vuln.get("fixed_version"):
+                entry["fixable"] += 1
+    rows = sorted(
+        repositories.items(),
+        key=lambda item: (-item[1]["critical"], -item[1]["high"], item[0]),
+    )
+    lines = [
+        f"<!-- cve-issue:v1:{encode_issue_key(str(record['key']))} -->",
+        "# CVE scan summary",
+        "",
+        f"- Images scanned: {report.get('images_scanned', 0)}/{report.get('images_requested', 0)}",
+        f"- Affected images: {report.get('images_affected', 0)}",
+        f"- Findings: {report.get('total_findings', 0)} "
+        f"(fixable {report.get('fixable_findings', 0)})",
+        f"- Scan errors: {len(report.get('errors') or [])}",
+        "",
+        "| Repository | Images | Critical | High | Fixable |",
+        "|---|---|---|---|---|",
+    ]
+    for repo, entry in rows[:30]:
+        lines.append(
+            f"| `{repo}` | {entry['images']} | {entry['critical']} | "
+            f"{entry['high']} | {entry['fixable']} |"
+        )
+    if len(rows) > 30:
+        lines.append(f"| … | | | | {len(rows) - 30} more repositories |")
+    lines += [
+        "",
+        "Full findings are in the private `cve-scan` workflow artifact. "
+        "This summary replaces the per-image issues; those are closed automatically.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def render_issue_body(record: dict[str, Any]) -> str:
+    if record.get("summary"):
+        return render_summary_body(record)
     vulnerabilities = sorted(
         record.get("vulnerabilities") or [],
         key=lambda item: (0 if item.get("severity") == "CRITICAL" else 1, item.get("id", "")),
@@ -327,13 +394,18 @@ def main() -> int:
     parser.add_argument("--plan", type=Path, required=True)
     parser.add_argument("--repo", default="web3-frozen/homelab-apps")
     parser.add_argument("--summary-out", type=Path, default=Path(".validation-renders/notification-summary.txt"))
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Maintain one scan-summary issue instead of one issue per image",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     report = json.loads(args.report.read_text(encoding="utf-8"))
     plan = json.loads(args.plan.read_text(encoding="utf-8"))
     summary = summary_text(report, plan)
-    records = issue_records(report)
+    records = issue_records(report, summary=args.summary)
     args.summary_out.parent.mkdir(parents=True, exist_ok=True)
     args.summary_out.write_text(summary + "\n", encoding="utf-8")
     print(summary)
@@ -342,7 +414,7 @@ def main() -> int:
         print(json.dumps([issue_title(record) for record in records], indent=2))
         return 0
 
-    close_missing = should_close_missing_issues(report)
+    close_missing = should_close_missing_issues(report) or args.summary
     issue_result = sync_github_issues(args.repo, records, close_missing=close_missing)
     summary += (
         f"\nIssues created: {issue_result['created']}, updated: {issue_result['updated']}, "
