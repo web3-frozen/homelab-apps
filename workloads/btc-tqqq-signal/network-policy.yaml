@@ -7,7 +7,16 @@ spec:
     matchLabels:
       app.kubernetes.io/name: btc-tqqq-signal
   policyTypes: [Ingress, Egress]
-  ingress: []
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - {protocol: TCP, port: 8080}
   egress:
     - to:
         - namespaceSelector:
