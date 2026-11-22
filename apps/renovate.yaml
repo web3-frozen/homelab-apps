@@ -37,7 +37,7 @@ spec:
   source:
     repoURL: https://docs.renovatebot.com/helm-charts
     chart: renovate
-    targetRevision: "46.449.8"
+    targetRevision: "46.449.9"
     helm:
       valuesObject:
         fullnameOverride: renovate
@@ -157,6 +157,11 @@ spec:
                 }
               ],
               "packageRules": [
+                {
+                  "matchDatasources": ["docker"],
+                  "matchPackageNames": ["ghcr.io/web3-frozen/btc-tqqq-signal"],
+                  "enabled": false
+                },
                 {
                   "matchUpdateTypes": ["minor", "patch"],
                   "excludePackageNames": ["longhorn"],
