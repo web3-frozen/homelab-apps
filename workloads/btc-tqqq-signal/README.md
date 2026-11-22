@@ -76,7 +76,8 @@ daily at 08:05 HKT and:
 3. Mirrors the ledger to D1.
 4. Generates a self-contained HTML report with total invested, equity, P&L,
    ROI, TWR, Sharpe, max drawdown, allocation, trades and cashflows.
-5. Uploads the report and CSV/JSON exports to R2.
+5. Uploads the report and CSV/JSON exports to R2 and prints a seven-day
+   presigned report URL.
 
 When Flow B needs cash to buy, it redeems only the shortfall from Bitget
 flexible savings. Bitget returns flexible redemptions to the spot account; the
