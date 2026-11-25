@@ -11,10 +11,18 @@ permissions:
   contents: read
 
 concurrency:
-  # The job-local API server is CPU-heavy. Run one validation at a time so
-  # concurrent PRs do not starve each other's etcd and hit request timeouts.
-  group: validate-gitops
-  cancel-in-progress: false
+  # Key the group per PR (and per ref for main pushes). A single global group
+  # used to serialise validations, but GitHub cancels any *pending* run when a
+  # newer run is queued in the same group. With the bot PR stream that silently
+  # cancelled required checks (e.g. PR #268), leaving the PR permanently
+  # blocked with no check to re-run. A new push to the same PR should still
+  # supersede its own in-flight validation.
+  #
+  # The job-local API server is CPU-heavy. If concurrent validations start
+  # timing out on etcd/apiserver requests again, give this workflow a dedicated
+  # runner scale set with maxRunners=1 instead of reintroducing a global group.
+  group: validate-gitops-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:

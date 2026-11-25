@@ -71,11 +71,21 @@ daily at 08:05 HKT and:
 
 1. Reads spot, flexible savings and both market prices.
 2. Records a daily equity snapshot and syncs recent USDT deposits.
-3. Mirrors the ledger to D1.
-4. Generates a self-contained HTML report with total invested, equity, P&L,
-   ROI, TWR, Sharpe, max drawdown, allocation, trades and cashflows.
-5. Uploads the report and CSV/JSON exports to R2 and prints a seven-day
+3. Runs the savings allocator in the mode set by `BITGET_SAVINGS_ALLOCATOR`
+   (`plan` by default).
+4. Mirrors the ledger to D1.
+5. Generates a self-contained HTML report with total invested, equity, P&L,
+   ROI, TWR, Sharpe, max drawdown, allocation, savings breakdown, entry/exit
+   rules, trades and cashflows.
+6. Uploads the report and CSV/JSON exports to R2 and prints a seven-day
    presigned report URL.
+
+The allocator only uses Bitget Simple Earn **flexible** USDT products with
+`productLevel=normal`. Fixed-term, VIP, Shark Fin, Elite and all structured or
+principal-at-risk products are excluded. Turn off Bitget's own auto-invest
+feature before changing `BITGET_SAVINGS_ALLOCATOR` from `plan` to `live`;
+otherwise it can re-subscribe idle spot above a product's high-rate cap and
+fight the allocator.
 
 When Flow B needs cash to buy, it redeems only the shortfall from Bitget
 flexible savings. Bitget returns flexible redemptions to the spot account; the
