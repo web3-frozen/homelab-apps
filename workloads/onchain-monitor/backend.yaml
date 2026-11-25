@@ -73,11 +73,17 @@ spec:
               value: "redis://redis-master.redis.svc.cluster.local:6379/0"
           resources:
             requests:
-              cpu: 100m
-              memory: 64Mi
+              cpu: 200m
+              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 256Mi
+              # Average use is ~75-90m, but the Go poller is bursty (10 sources
+              # fanned out every 60s, JSON decode + DB writes). At 500m the CFS
+              # quota is 50ms/100ms, which throttled ~50% of periods even though
+              # average usage was below 100m.
+              cpu: "1"
+              # Working set peaked at 233Mi against a 256Mi limit. Raise the
+              # limit so a GC/poll spike cannot OOM-kill the API.
+              memory: 512Mi
           livenessProbe:
             httpGet:
               path: /healthz
