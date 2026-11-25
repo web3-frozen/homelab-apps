@@ -280,7 +280,9 @@ spec:
               args:
                 - >-
                   python -B -u /app/trade.py --snapshot --state-dir /var/lib/btc-tqqq
-                  && python -B -u /app/report.py --db /var/lib/btc-tqqq/bitget.sqlite3
+                  && python -B -u /app/trade.py --allocate-savings
+                  ;
+                  python -B -u /app/report.py --db /var/lib/btc-tqqq/bitget.sqlite3
                   --out /var/lib/btc-tqqq/report.html --upload --prefix btc-tqqq/latest
               envFrom:
                 - configMapRef:
