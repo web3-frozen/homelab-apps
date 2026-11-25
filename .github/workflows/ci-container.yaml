@@ -118,11 +118,19 @@ jobs:
       - name: Go lint
         if: inputs.go-version != ''
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        env:
+          # Runner pods are capped at 1 CPU / 2Gi. On a cold module+build cache
+          # (go.sum change invalidates the setup-go cache key) golangci-lint
+          # exceeded that limit and the runner pod died mid-step, surfacing as
+          # "The self-hosted runner lost communication with the server".
+          # GOMEMLIMIT makes the Go runtime GC harder instead of growing past
+          # the container limit; GOGC is the fallback for older toolchains.
+          GOMEMLIMIT: "2600MiB"
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
-          # 15m: on a cold Go build cache (self-hosted runner rebuilt 2026-11-14)
-          # package loading alone exceeded the old 5m cap on every run
-          args: --timeout=15m
+          # 25m: cold-cache lint on a 1-2 CPU runner needs >15m for this repo
+          # (see demo-api PR #13: exit code 4 = timeout at 15m, every job)
+          args: --timeout=25m
 
       - name: Go test
         if: inputs.go-version != ''
@@ -250,14 +258,14 @@ jobs:
           limit-severities-for-sarif: true
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4
+        uses: github/codeql-action/upload-sarif@915412ff23e8b7659517e607487dbeae018f2934 # v4
         if: always() && hashFiles('trivy-results.sarif') != ''
         continue-on-error: true
         with:
           sarif_file: "trivy-results.sarif"
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        uses: anchore/sbom-action@dfcb83b97731532d72be422cbc51ee64adb6fd56 # v0.24.4
         with:
           image: "${{ env.IMAGE }}@${{ needs.build-push.outputs.image-digest }}"
           format: spdx-json

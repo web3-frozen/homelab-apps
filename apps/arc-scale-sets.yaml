@@ -121,8 +121,10 @@ spec:
                     cpu: 250m
                     memory: 512Mi
                   limits:
-                    cpu: "1"
-                    memory: 2Gi
+                    # 3Gi: golangci-lint on a cold module cache was OOM-killed
+                    # at 2Gi, which GitHub reports as "runner lost communication"
+                    cpu: "2"
+                    memory: 3Gi
   destination:
     server: https://kubernetes.default.svc
     namespace: actions-runner-system
