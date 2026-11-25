@@ -1,0 +1,35 @@
+# Routes Cloudflare free-tier quota alerts (scope=cloudflare) to Telegram.
+# The PrometheusRule lives in the cloudflare-monitor namespace; the matcher
+# uses the explicit scope label so it does not depend on namespace labels.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: cloudflare-free-tier-telegram
+  namespace: monitoring
+spec:
+  route:
+    receiver: telegram-cloudflare
+    groupBy: ["alertname", "quota"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: scope
+        value: cloudflare
+        matchType: "="
+  receivers:
+    - name: telegram-cloudflare
+      telegramConfigs:
+        - chatID: 338591783
+          botToken:
+            name: alertmanager-telegram
+            key: token
+          message: |
+            🔔 <b>{{ .Status | toUpper }}</b> {{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }}
+
+            {{ range .Alerts }}
+            <b>{{ .Labels.alertname }}</b> ({{ .Labels.severity }})
+            {{ .Annotations.summary }}
+            {{ .Annotations.description }}
+            {{ end }}
+          parseMode: HTML
