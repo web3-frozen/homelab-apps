@@ -14,6 +14,6 @@ images:
 - digest: sha256:30efa909cc9a22ead57e5478ced83a36a3fe644bdcd1cc20e7a25bb696c7a932
   name: ghcr.io/web3-frozen/defi-lending-api
   newName: ghcr.io/web3-frozen/defi-lending-api
-- digest: sha256:dd4c3b5118923d2827c04fd2a89f8ed408db9a5364de18b94b825ff2e0ead13e
+- digest: sha256:3503a863eaa850e3d8f73794f813ec146fe51a137e6d6f14ba3ed5c332ae1f8d
   name: ghcr.io/web3-frozen/defi-lending-frontend
   newName: ghcr.io/web3-frozen/defi-lending-frontend
