@@ -125,13 +125,12 @@ jobs:
           # "The self-hosted runner lost communication with the server".
           # GOMEMLIMIT makes the Go runtime GC harder instead of growing past
           # the container limit; GOGC is the fallback for older toolchains.
-          GOMEMLIMIT: "1600MiB"
-          GOGC: "50"
+          GOMEMLIMIT: "2600MiB"
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
-          # 15m: on a cold Go build cache (self-hosted runner rebuilt 2026-11-14)
-          # package loading alone exceeded the old 5m cap on every run
-          args: --timeout=15m
+          # 25m: cold-cache lint on a 1-2 CPU runner needs >15m for this repo
+          # (see demo-api PR #13: exit code 4 = timeout at 15m, every job)
+          args: --timeout=25m
 
       - name: Go test
         if: inputs.go-version != ''
