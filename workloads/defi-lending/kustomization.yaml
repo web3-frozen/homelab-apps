@@ -11,7 +11,7 @@ resources:
 - servicemonitor.yaml
 
 images:
-- digest: sha256:30efa909cc9a22ead57e5478ced83a36a3fe644bdcd1cc20e7a25bb696c7a932
+- digest: sha256:84fb6311cb5862a499207a0cb79beccb15d692a566a750a456a34ae5e43480ad
   name: ghcr.io/web3-frozen/defi-lending-api
   newName: ghcr.io/web3-frozen/defi-lending-api
 - digest: sha256:dd4c3b5118923d2827c04fd2a89f8ed408db9a5364de18b94b825ff2e0ead13e
