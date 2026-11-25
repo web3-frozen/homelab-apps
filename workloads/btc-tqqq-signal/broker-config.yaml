@@ -26,8 +26,8 @@ data:
   BITGET_BTC_WEIGHT: "0.5"
   BITGET_TQQQ_WEIGHT: "0.5"
   # Simple Earn flexible USDT only. Never fixed-term or structured products.
-  # Keep plan mode until Bitget's own auto-invest feature is switched off.
-  BITGET_SAVINGS_ALLOCATOR: "plan"
+  # Bitget auto-invest is off, so the allocator may move funds.
+  BITGET_SAVINGS_ALLOCATOR: "live"
   BITGET_SAVINGS_MIN_SPOT_USDT: "1"
   BITGET_SAVINGS_MIN_GAIN_USDT: "1"
   BITGET_SAVINGS_MIN_MOVE_USDT: "10"
