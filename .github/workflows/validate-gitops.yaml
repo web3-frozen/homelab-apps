@@ -18,16 +18,17 @@ concurrency:
   # blocked with no check to re-run. A new push to the same PR should still
   # supersede its own in-flight validation.
   #
-  # The job-local API server is CPU-heavy. If concurrent validations start
-  # timing out on etcd/apiserver requests again, give this workflow a dedicated
-  # runner scale set with maxRunners=1 instead of reintroducing a global group.
+  # The job-local API server is CPU-heavy, so this workflow and cve-verify run
+  # on the dedicated `homelab-validate` scale set (maxRunners=1). Jobs queue at
+  # the ARC listener — lossless, unlike a global concurrency group — while this
+  # per-PR group still lets a new push supersede its own stale validation.
   group: validate-gitops-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
     name: Render and server-side validate
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'homelab-homelab-apps' || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && 'homelab-validate' || 'ubuntu-latest' }}
     timeout-minutes: 30
 
     steps:
