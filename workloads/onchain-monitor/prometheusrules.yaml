@@ -36,13 +36,16 @@ spec:
             summary: "High HTTP error rate on Onchain Monitor"
             description: "HTTP 5xx error rate is above 5% for the last 5 minutes (current: {{ $value | humanizePercentage }})."
 
-        # Any source poll error rate >50% over 5 minutes
+        # Any source poll error rate >50% over 5 minutes.
+        # Alpha is excluded: it sits behind Cloudflare and a 522 from its
+        # origin can last tens of minutes. Paging every 5 minutes is noise;
+        # the 2-hour stale alert below is the signal that matters.
         - alert: OnchainMonitorPollFailure
           expr: |
             (
-              sum by (source) (rate(onchain_monitor_poll_total{status="error"}[5m]))
+              sum by (source) (rate(onchain_monitor_poll_total{source!="alpha",status="error"}[5m]))
               /
-              sum by (source) (rate(onchain_monitor_poll_total[5m]))
+              sum by (source) (rate(onchain_monitor_poll_total{source!="alpha"}[5m]))
             ) > 0.5
           for: 5m
           labels:
@@ -51,15 +54,15 @@ spec:
             summary: "Poll failures for source {{ $labels.source }}"
             description: "Source {{ $labels.source }} has >50% poll failure rate for 5 minutes."
 
-        # No successful poll for 10 continuous minutes. Turtle is excluded
-        # here because Cloudflare intermittently blocks it while the source
-        # usually recovers on its own.
+        # No successful poll for 10 continuous minutes. Turtle and alpha are
+        # excluded here because Cloudflare intermittently blocks them; they
+        # get dedicated 2-hour alerts below.
         - alert: OnchainMonitorPollStale
           # The metric is a Unix timestamp, so compare the age against 600s.
           # Comparing against 0 fired after any 10-minute-old series, even
           # when the last success was only 20-200s ago.
           expr: |
-            (time() - onchain_monitor_poll_last_success_timestamp{source!="turtle"}) > 600
+            (time() - onchain_monitor_poll_last_success_timestamp{source!~"turtle|alpha"}) > 600
           for: 1m
           labels:
             severity: warning
@@ -78,6 +81,20 @@ spec:
           annotations:
             summary: "Stale data from source turtle"
             description: "Source turtle has not polled successfully for 2 continuous hours (last success {{ $value | humanizeDuration }} ago)."
+
+        # Alpha is also Cloudflare-fronted. Its /api/data endpoint regularly
+        # returns 522 while the origin is down (the cached site root still
+        # returns 200), so a 10-minute threshold produces pager noise for an
+        # external outage we cannot fix. Wait for a sustained 2-hour gap.
+        - alert: OnchainMonitorPollStaleAlpha
+          expr: |
+            (time() - onchain_monitor_poll_last_success_timestamp{source="alpha"}) > 7200
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Stale data from source alpha"
+            description: "Source alpha has not polled successfully for 2 continuous hours (last success {{ $value | humanizeDuration }} ago). A Cloudflare 522 on https://alpha123.uk/api/data means the upstream origin is down; the cached site root may still return 200."
 
         # p95 HTTP latency >2s for 5 minutes
         - alert: OnchainMonitorHighLatency
