@@ -1,0 +1,44 @@
+# Free-tier quota alerts. Limits are enforced by cloudflare-quota-exporter;
+# this rule only compares the exported usage ratio against the 80% threshold.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cloudflare-free-tier
+  labels:
+    app.kubernetes.io/part-of: cloudflare-monitor
+spec:
+  groups:
+    - name: cloudflare-free-tier.rules
+      rules:
+        - alert: CloudflareFreeTierUsageHigh
+          expr: cloudflare_free_tier_usage_ratio > 0.8
+          for: 15m
+          labels:
+            severity: warning
+            scope: cloudflare
+          annotations:
+            summary: "Cloudflare free tier {{ $labels.quota }} at {{ $value | humanizePercentage }}"
+            description: "{{ $labels.quota }} is at {{ $value | humanizePercentage }} of its {{ $labels.period }} free-tier limit. Check the Cloudflare Free Tier dashboard."
+
+        - alert: CloudflareQuotaExporterScrapeFailed
+          expr: cloudflare_free_tier_scrape_success == 0
+          for: 15m
+          labels:
+            severity: warning
+            scope: cloudflare
+          annotations:
+            summary: "Cloudflare quota exporter cannot reach the API"
+            description: "The exporter has failed to refresh Cloudflare usage for 15 minutes. Metrics are stale; check its logs."
+
+        - alert: CloudflareQuotaExporterDown
+          # up==0 catches a running target that Prometheus cannot scrape;
+          # absent() catches a scaled-to-zero exporter whose target no longer
+          # exists (the ServiceMonitor has no endpoints).
+          expr: absent(up{namespace="cloudflare-monitor"}) or (up{namespace="cloudflare-monitor"} == 0)
+          for: 10m
+          labels:
+            severity: warning
+            scope: cloudflare
+          annotations:
+            summary: "Cloudflare quota exporter is down"
+            description: "Prometheus cannot scrape the Cloudflare quota exporter."
