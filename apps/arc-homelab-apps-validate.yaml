@@ -1,0 +1,80 @@
+# Dedicated single-slot runner for the heavy GitOps validation jobs
+# (Validate GitOps upgrades + CVE remediation verification).
+#
+# Those jobs spin up a local etcd/apiserver and scan large images. Running
+# several of them at once starves the shared runner pool and makes Trivy hit
+# its per-image timeout. A maxRunners=1 scale set queues jobs at the ARC
+# listener instead of relying on a GitHub Actions concurrency group, which
+# would cancel the pending run and leave a required check that never passes.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arc-homelab-apps-validate
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+    path: .
+    targetRevision: "0.15.1"
+    helm:
+      releaseName: arc-homelab-apps-validate
+      valuesObject:
+        githubConfigUrl: https://github.com/web3-frozen/homelab-apps
+        githubConfigSecret: controller-manager
+        runnerScaleSetName: homelab-validate
+        minRunners: 0
+        maxRunners: 1
+        controllerServiceAccount:
+          namespace: actions-runner-system
+          name: arc-gha-rs-controller
+        template:
+          metadata:
+            labels:
+              ci.homelab/isolated-runner: "true"
+          spec:
+            automountServiceAccountToken: false
+            imagePullSecrets:
+              - name: ghcr-pull-secret
+            priorityClassName: homelab-ci
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: node-role.kubernetes.io/control-plane
+                          operator: DoesNotExist
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1001
+              runAsGroup: 1001
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: runner
+                image: ghcr.io/web3-frozen/arc-linux-dev:runner-2.338.2-2@sha256:3b610e5d68e8c93163721360d5f5acd65d9e63bf960638bdb2e09beeebc6207d
+                command: ["/home/runner/run.sh"]
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop: [ALL]
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 512Mi
+                  limits:
+                    cpu: "1"
+                    memory: 2Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: actions-runner-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
