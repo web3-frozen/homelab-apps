@@ -96,6 +96,19 @@ spec:
             summary: "Stale data from source alpha"
             description: "Source alpha has not polled successfully for 2 continuous hours (last success {{ $value | humanizeDuration }} ago). A Cloudflare 522 on https://alpha123.uk/api/data means the upstream origin is down; the cached site root may still return 200."
 
+        # If the API restarts before alpha manages a single success, the
+        # last-success series is absent (not stale), so the rule above never
+        # fires. Catch a full 2h window with no successful-poll sample at all.
+        - alert: OnchainMonitorPollStaleAlphaNoSuccess
+          expr: |
+            absent_over_time(onchain_monitor_poll_last_success_timestamp{source="alpha"}[2h])
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Source alpha has no successful poll on record"
+            description: "No successful alpha poll has been recorded for at least 2 hours (the last-success series is absent, e.g. since the API restarted). Check alpha123.uk; a Cloudflare 522 means the origin is down."
+
         # p95 HTTP latency >2s for 5 minutes
         - alert: OnchainMonitorHighLatency
           expr: |
