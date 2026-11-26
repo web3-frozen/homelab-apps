@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - alertmanager-config.yaml
+  - cloudflare-alertmanager-config.yaml
   - alertmanager-telegram-externalsecret.yaml
   - grafana-admin-externalsecret.yaml
   - grafana-oidc-externalsecret.yaml
@@ -46,6 +47,15 @@ configMapGenerator:
   - name: grafana-dashboard-ci-runners
     files:
       - ci-runners.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Homelab
+
+  - name: grafana-dashboard-cloudflare
+    files:
+      - cloudflare-quotas.json
     options:
       labels:
         grafana_dashboard: "1"
