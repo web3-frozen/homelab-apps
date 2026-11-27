@@ -14,6 +14,6 @@ resources:
 - report-server.yaml
 - network-policy.yaml
 images:
-- digest: sha256:94c221c887505f51b9a975074bfbccce3b3124fac26c8772918da9488610656d
+- digest: sha256:6e4a2a76943d7c2b9ad181132de827dcf80b07d805dbd5a5743d80da2d6f635b
   name: ghcr.io/web3-frozen/btc-tqqq-signal
   newName: ghcr.io/web3-frozen/btc-tqqq-signal
