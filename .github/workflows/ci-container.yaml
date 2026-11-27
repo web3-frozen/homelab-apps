@@ -128,9 +128,11 @@ jobs:
           GOMEMLIMIT: "2600MiB"
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
-          # 25m: cold-cache lint on a 1-2 CPU runner needs >15m for this repo
-          # (see demo-api PR #13: exit code 4 = timeout at 15m, every job)
-          args: --timeout=25m
+          # 45m: cold-cache lint on a 1-2 CPU runner needs ~30m for these repos
+          # (demo-api 2026-11-21 Lint & Test took 30m cold; 2026-11-27 runs on
+          # demo-api #14 and onchain-monitor #89 still hit exit code 4 at the
+          # 25m ceiling). Keep headroom below GitHub's 6h job limit.
+          args: --timeout=45m
 
       - name: Go test
         if: inputs.go-version != ''
