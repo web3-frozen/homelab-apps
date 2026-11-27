@@ -16,7 +16,7 @@ images:
 - digest: sha256:286966fc9f2c870eeb7702169eb9f1ae704dfed8fb871241e7345242f59fcc48
   name: ghcr.io/web3-frozen/demo-api
   newName: ghcr.io/web3-frozen/demo-api
-- digest: sha256:a124fead256f95cc7ad9f91ff995b4bb35c1ee65b7126bf57a3d93a50fea850f
+- digest: sha256:abfb2c6a954b9043b9a44e30a144e3386801a254c420426a8106fdcdeafc5cdc
   name: ghcr.io/web3-frozen/demo-frontend
   newName: ghcr.io/web3-frozen/demo-frontend
 - digest: sha256:9eef346472cdd0bfeb3edb192f0474317ddda441fdcffe9cc0810048889c5e53
