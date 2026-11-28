@@ -30,6 +30,11 @@ spec:
           defaultDashboardsEnabled: false
           deploymentStrategy:
             type: Recreate
+          # Temporary: the Grafana volume has stale Longhorn mounts on
+          # worker-2/3; worker-1 is the last node where it mounted cleanly.
+          # Remove after the Longhorn node restart/maintenance.
+          nodeSelector:
+            kubernetes.io/hostname: k3s-worker-1
           service:
             type: ClusterIP
           persistence:
