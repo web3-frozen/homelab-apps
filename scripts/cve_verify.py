@@ -37,6 +37,43 @@ def baseline_findings(plan: dict[str, Any], repositories: set[str]) -> list[dict
     ]
 
 
+def image_refs_by_repository(images: list[str]) -> dict[str, set[str]]:
+    refs: dict[str, set[str]] = {}
+    for image in images:
+        if not image:
+            continue
+        refs.setdefault(repository(image), set()).add(image)
+    return refs
+
+
+def changed_repositories(
+    marker: dict[str, Any], report: dict[str, Any], plan: dict[str, Any]
+) -> set[str]:
+    """Repositories whose rendered image reference changed in this PR.
+
+    A chart bump can change one image while leaving subchart images on the same
+    tag.  Requiring the CVEs of unchanged images to disappear makes the gate
+    impossible to satisfy; only verify what the PR actually changed.
+    """
+    requested = {
+        str(value)
+        for value in (marker.get("repositories") or [])
+        if str(value).strip()
+    }
+    baseline = baseline_findings(plan, requested)
+    baseline_refs = image_refs_by_repository(
+        [str(item.get("image", "")) for item in baseline]
+    )
+    candidate_refs = image_refs_by_repository(
+        [str(item.get("image", "")) for item in report.get("images") or []]
+    )
+    return {
+        image_repository
+        for image_repository in requested
+        if baseline_refs.get(image_repository) != candidate_refs.get(image_repository)
+    }
+
+
 def current_report_findings(report: dict[str, Any]) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     for image in report.get("images") or []:
@@ -162,11 +199,17 @@ def verify(
         if repository(image) not in repositories:
             failures.append("private-image marker repository does not match its image")
 
-    baseline = baseline_findings(plan, repositories)
+    changed = changed_repositories(marker, report, plan)
+    baseline = baseline_findings(plan, changed) if changed else []
     baseline_ids = {str(item.get("id")) for item in baseline if item.get("id")}
     fixable = [item for item in baseline if item.get("fixed_version")]
-    if not baseline:
-        failures.append("baseline artifact contains no findings for the affected repositories")
+    if not changed:
+        failures.append(
+            "no affected image reference changed; the PR does not update any "
+            "scanned image (pinned values or a no-op chart bump)"
+        )
+    elif not baseline:
+        failures.append("baseline artifact contains no findings for the changed repositories")
 
     candidate_findings = current_report_findings(report)
     for expected in fixable:
@@ -182,7 +225,7 @@ def verify(
                 break
 
     scoped_candidate_findings = [
-        current for current in candidate_findings if current["repository"] in repositories
+        current for current in candidate_findings if current["repository"] in changed
     ]
     for current in scoped_candidate_findings:
         if str(current.get("severity", "")).upper() == "CRITICAL" and str(
@@ -204,6 +247,7 @@ def verify(
         "marker_kind": marker.get("kind"),
         "applications": marker.get("applications") or [],
         "repositories": sorted(repositories),
+        "changed_repositories": sorted(changed),
         "baseline_findings": len(baseline),
         "baseline_fixable": len(fixable),
         "candidate_findings": len(candidate_findings),

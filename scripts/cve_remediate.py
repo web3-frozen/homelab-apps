@@ -12,15 +12,19 @@ Safety rules:
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import re
 import subprocess
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
 import yaml
+
+from validate_gitops import collect_images, render_helm_applications
 
 from cve_policy import (
     is_patch_update,
@@ -125,6 +129,7 @@ def load_applications(root: Path) -> list[dict[str, Any]]:
                 name = str((document.get("metadata") or {}).get("name", ""))
                 if not name or not source.get("repoURL"):
                     continue
+                destination = (document.get("spec") or {}).get("destination") or {}
                 applications.append(
                     {
                         "name": name,
@@ -133,6 +138,8 @@ def load_applications(root: Path) -> list[dict[str, Any]]:
                         "repo_url": str(source.get("repoURL")),
                         "chart": source.get("chart"),
                         "target_revision": str(source.get("targetRevision", "")),
+                        "namespace": str(destination.get("namespace", "default")),
+                        "document": document,
                     }
                 )
     return applications
@@ -170,6 +177,58 @@ def all_helm_versions(app: dict[str, Any]) -> list[str]:
         for item in versions
         if isinstance(item, dict) and item.get("version")
     ]
+
+
+def chart_bump_changed_repositories(
+    app: dict[str, Any], current: str, candidate: str, affected_images: Iterable[str]
+) -> set[str] | None:
+    """Return repositories whose rendered image changed in this chart bump.
+
+    A chart patch frequently changes nothing at all: the app pins image.tag /
+    digest in valuesObject (renovate) or the chart's appVersion is unchanged
+    (linkerd-viz).  Opening a remediation PR for such a bump creates a required
+    check that can never pass.  Even when something changes, subchart images
+    (postgresql/redis) often stay on the same tag; do not make the verifier
+    require their CVEs to disappear.
+
+    Returns None when the chart cannot be rendered; the caller keeps the
+    conservative all-repositories scope in that case.
+    """
+    affected_repositories = {repository(image) for image in affected_images}
+    document = app.get("document")
+    if not isinstance(document, dict):
+        return None
+
+    def refs_for(version: str) -> dict[str, set[str]]:
+        rendered_document = copy.deepcopy(document)
+        source = (rendered_document.get("spec") or {}).get("source") or {}
+        source["targetRevision"] = version
+        with tempfile.TemporaryDirectory(prefix="cve-render-") as temp:
+            documents, _ = render_helm_applications(
+                [rendered_document], Path(temp)
+            )
+            images = collect_images(documents)
+        refs: dict[str, set[str]] = {}
+        for image in images:
+            image_repository = repository(image)
+            if image_repository in affected_repositories:
+                refs.setdefault(image_repository, set()).add(image)
+        return refs
+
+    try:
+        before = refs_for(current)
+        after = refs_for(candidate)
+    except Exception as exc:  # noqa: BLE001 - render is a safety filter
+        print(
+            f"warning: cannot render {app.get('name')} {current}->{candidate}: {exc}",
+            flush=True,
+        )
+        return None
+    return {
+        image_repository
+        for image_repository in affected_repositories
+        if before.get(image_repository) != after.get(image_repository)
+    }
 
 
 def bump_target_revision(app: dict[str, Any], new_version: str) -> bool:
@@ -455,6 +514,27 @@ def build_plan(report: dict[str, Any], root: Path, apply: bool) -> dict[str, Any
                 }
             )
             continue
+        changed_repositories = chart_bump_changed_repositories(
+            app, current, candidate, affected["images"]
+        )
+        if changed_repositories is not None and not changed_repositories:
+            manual.append(
+                {
+                    "image": sorted(affected["images"])[0],
+                    "application": app_name,
+                    "chart": chart,
+                    "reason": (
+                        f"{chart} {current} -> {candidate}: rendered images are "
+                        "unchanged (values pin the image or the chart appVersion "
+                        "is unchanged); no attributable image remediation"
+                    ),
+                }
+            )
+            continue
+        if changed_repositories is None:
+            changed_repositories = {
+                repository(image) for image in affected["images"]
+            }
         bump = {
             "kind": "helm-chart",
             "app": app_name,
@@ -463,9 +543,7 @@ def build_plan(report: dict[str, Any], root: Path, apply: bool) -> dict[str, Any
             "from": current,
             "to": candidate,
             "trigger_images": sorted(affected["images"]),
-            "scope_repositories": sorted(
-                {repository(image) for image in affected["images"]}
-            ),
+            "scope_repositories": sorted(changed_repositories),
             "findings": affected["findings"],
             "applications": [app_name],
         }
@@ -550,6 +628,17 @@ def build_marker(
             for repository_name in bump.get("scope_repositories") or []
         }
     )
+    # The marker describes the chart PR, not the separate private-image
+    # rebuilds.  Including rebuild targets here makes the post-merge guard wait
+    # on (and potentially revert) applications this PR never touched.
+    applications = sorted(
+        {
+            str(app)
+            for bump in plan.get("bumps") or []
+            for app in bump.get("applications") or []
+            if app
+        }
+    )
     return {
         "version": 1,
         "kind": "gitops-chart",
@@ -558,7 +647,7 @@ def build_marker(
             "run_id": run_id,
             "artifact": "cve-scan",
         },
-        "applications": plan.get("applications") or [],
+        "applications": applications,
         "repositories": repositories,
         "changes": changes,
     }
