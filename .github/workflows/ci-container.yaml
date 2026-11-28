@@ -119,13 +119,15 @@ jobs:
         if: inputs.go-version != ''
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         env:
-          # Runner pods are capped at 1 CPU / 2Gi. On a cold module+build cache
-          # (go.sum change invalidates the setup-go cache key) golangci-lint
-          # exceeded that limit and the runner pod died mid-step, surfacing as
-          # "The self-hosted runner lost communication with the server".
-          # GOMEMLIMIT makes the Go runtime GC harder instead of growing past
-          # the container limit; GOGC is the fallback for older toolchains.
-          GOMEMLIMIT: "2600MiB"
+          # The app repos use builder scale sets capped at 1 CPU / 1536Mi
+          # (the 2Gi homelab-apps pool is not what runs this job). On a cold
+          # module+build cache (go.sum change invalidates the setup-go cache
+          # key) golangci-lint exceeded that limit and the runner pod died
+          # mid-step, surfacing as "The self-hosted runner lost communication
+          # with the server". Keep the soft limit below the 1536Mi cgroup;
+          # GOGC is the fallback for older toolchains.
+          GOMEMLIMIT: "1100MiB"
+          GOGC: "50"
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
           # 45m: cold-cache lint on a 1-2 CPU runner needs ~30m for these repos
@@ -137,21 +139,21 @@ jobs:
       - name: Go test
         if: inputs.go-version != ''
         env:
-          # Same 1 CPU / 2Gi pod cap as the lint step above. A go.sum change
-          # invalidates the setup-go cache, so this runs cold; an unbounded
-          # `go test -race ./...` then OOMs the pod and the step dies as
-          # "The self-hosted runner lost communication with the server"
+          # Same 1 CPU / 1536Mi builder pod cap as the lint step above. A
+          # go.sum change invalidates the setup-go cache, so this runs cold;
+          # an unbounded `go test -race ./...` then OOMs the pod and the step
+          # dies as "The self-hosted runner lost communication with the server"
           # (onchain-monitor #89, 2026-11-28: failed this way on 2 of 3 attempts).
-          # GOMEMLIMIT makes the runtime GC harder instead of growing past the
-          # container limit; -p 1 keeps one race-compile in flight at a time.
-          GOMEMLIMIT: "1800MiB"
+          # 1100MiB leaves headroom for the race detector and the OS; -p 1
+          # keeps one race-compile in flight at a time.
+          GOMEMLIMIT: "1100MiB"
           GOGC: "50"
         run: go test -race -p 1 ./...
 
       - name: Go coverage
         if: inputs.go-version != ''
         env:
-          GOMEMLIMIT: "1800MiB"
+          GOMEMLIMIT: "1100MiB"
           GOGC: "50"
         run: |
           go test -p 1 -coverprofile=coverage.out ./... || true
