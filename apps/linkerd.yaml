@@ -112,7 +112,7 @@ spec:
   source:
     repoURL: https://helm.linkerd.io/edge
     chart: linkerd-viz
-    targetRevision: "2026.11.2"
+    targetRevision: "2026.11.3"
     helm:
       valuesObject:
         dashboard:
