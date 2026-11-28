@@ -23,8 +23,11 @@ data:
   BITGET_MAX_ORDER_USD: "10000"
   BITGET_MAX_SLEEVE_USD: "20000"
   BITGET_LIMIT_SLIPPAGE_BPS: "100"
-  BITGET_BTC_WEIGHT: "0.5"
-  BITGET_TQQQ_WEIGHT: "0.5"
+  BITGET_BTC_WEIGHT: "0.425"
+  BITGET_TQQQ_WEIGHT: "0.425"
+  BITGET_HYPE_WEIGHT: "0.15"
+  BITGET_HYPE_SYMBOL: HYPEUSDT
+  BITGET_HYPE_MIN_TRADE_USD: "5"
   # Simple Earn flexible USDT only. Never fixed-term or structured products.
   # Bitget auto-invest is off, so the allocator may move funds.
   BITGET_SAVINGS_ALLOCATOR: "live"
