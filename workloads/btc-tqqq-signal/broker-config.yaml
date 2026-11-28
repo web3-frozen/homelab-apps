@@ -29,6 +29,10 @@ data:
   # Bitget auto-invest is off, so the allocator may move funds.
   BITGET_SAVINGS_ALLOCATOR: "live"
   BITGET_SAVINGS_MIN_SPOT_USDT: "1"
+  # The daily sweep only subscribes idle spot. The full rebalance keeps the
+  # higher annual-gain and move thresholds below so tiny APY changes do not
+  # churn existing principal.
+  BITGET_SAVINGS_SWEEP_MIN_MOVE_USDT: "0.01"
   BITGET_SAVINGS_MIN_GAIN_USDT: "1"
   BITGET_SAVINGS_MIN_MOVE_USDT: "10"
   STATE_DIR: /var/lib/btc-tqqq

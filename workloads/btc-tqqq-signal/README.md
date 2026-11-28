@@ -71,8 +71,8 @@ daily at 08:05 HKT and:
 
 1. Reads spot, flexible savings and both market prices.
 2. Records a daily equity snapshot and syncs recent USDT deposits.
-3. Runs the savings allocator in the mode set by `BITGET_SAVINGS_ALLOCATOR`
-   (`plan` by default).
+3. Runs the full savings allocator in the mode set by
+   `BITGET_SAVINGS_ALLOCATOR` (`live`).
 4. Mirrors the ledger to D1.
 5. Generates a self-contained HTML report with total invested, equity, P&L,
    ROI, TWR, Sharpe, max drawdown, allocation, savings breakdown, entry/exit
@@ -80,12 +80,19 @@ daily at 08:05 HKT and:
 6. Uploads the report and CSV/JSON exports to R2 and prints a seven-day
    presigned report URL.
 
+The `btc-tqqq-savings-sweep` CronJob runs daily at 08:30 HKT and calls
+`trade.py --sweep-savings`. It is the one-way half of the allocator: it
+subscribes spot USDT above `BITGET_SAVINGS_MIN_SPOT_USDT` into the
+highest-rate eligible flexible product and never redeems existing principal.
+That keeps the daily interest from sitting in spot without lowering the full
+allocator's annual-gain threshold. `BITGET_SAVINGS_SWEEP_MIN_MOVE_USDT`
+(default 0.01) skips dust.
+
 The allocator only uses Bitget Simple Earn **flexible** USDT products with
 `productLevel=normal`. Fixed-term, VIP, Shark Fin, Elite and all structured or
-principal-at-risk products are excluded. Turn off Bitget's own auto-invest
-feature before changing `BITGET_SAVINGS_ALLOCATOR` from `plan` to `live`;
-otherwise it can re-subscribe idle spot above a product's high-rate cap and
-fight the allocator.
+principal-at-risk products are excluded. Bitget's own auto-invest feature must
+stay off; otherwise it can re-subscribe idle spot above a product's high-rate
+cap and fight the allocator.
 
 When Flow B needs cash to buy, it redeems only the shortfall from Bitget
 flexible savings. Bitget returns flexible redemptions to the spot account; the
