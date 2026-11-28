@@ -85,6 +85,11 @@ on:
         required: false
         type: string
         default: ""
+      security-repo:
+        description: "Private repo that owns the baseline cve-scan artifact"
+        required: false
+        type: string
+        default: "web3-frozen/homelab-apps-security"
       application:
         description: "Argo CD Application to verify after merge"
         required: false
@@ -324,6 +329,7 @@ jobs:
           CVE_IDS: ${{ inputs.cve_ids }}
           PREVIOUS_IMAGE: ${{ inputs.previous_image }}
           BASELINE_RUN_ID: ${{ inputs.baseline_run_id }}
+          SECURITY_REPO: ${{ inputs.security-repo }}
           APPLICATION: ${{ inputs.application }}
           WORKLOAD_DIR: ${{ inputs.workload-dir }}
           RUN_ID: ${{ github.run_id }}
@@ -359,7 +365,9 @@ jobs:
               "version": 1,
               "kind": "private-image",
               "source_run": {
-                  "repo": os.environ["GITOPS_REPO"],
+                  # The cve-scan artifact lives in the private security repo,
+                  # not in the GitOps repo that receives the deploy PR.
+                  "repo": os.environ["SECURITY_REPO"],
                   "run_id": int(os.environ["BASELINE_RUN_ID"]),
                   "artifact": "cve-scan",
               },
