@@ -19,9 +19,10 @@ spec:
     requests.memory: 12Gi
     # 12 slots: SiteSight may use up to 10 (scale set max), leaving two for a
     # short validation/refresh job from any other repository.
-    # Each builder requests 500m/1Gi and limits 2 CPU/3.5Gi.
+    # Each builder requests 500m/1Gi and limits 2 CPU/5Gi (3Gi runner +
+    # 2Gi buildkit). 10 builders + the 2Gi validation runner fit in 60Gi.
     limits.cpu: "24"
-    limits.memory: 44Gi
+    limits.memory: 60Gi
   scopeSelector:
     matchExpressions:
       - scopeName: PriorityClass
