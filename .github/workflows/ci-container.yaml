@@ -136,12 +136,25 @@ jobs:
 
       - name: Go test
         if: inputs.go-version != ''
-        run: go test -race ./...
+        env:
+          # Same 1 CPU / 2Gi pod cap as the lint step above. A go.sum change
+          # invalidates the setup-go cache, so this runs cold; an unbounded
+          # `go test -race ./...` then OOMs the pod and the step dies as
+          # "The self-hosted runner lost communication with the server"
+          # (onchain-monitor #89, 2026-11-28: failed this way on 2 of 3 attempts).
+          # GOMEMLIMIT makes the runtime GC harder instead of growing past the
+          # container limit; -p 1 keeps one race-compile in flight at a time.
+          GOMEMLIMIT: "1800MiB"
+          GOGC: "50"
+        run: go test -race -p 1 ./...
 
       - name: Go coverage
         if: inputs.go-version != ''
+        env:
+          GOMEMLIMIT: "1800MiB"
+          GOGC: "50"
         run: |
-          go test -coverprofile=coverage.out ./... || true
+          go test -p 1 -coverprofile=coverage.out ./... || true
           go tool cover -func=coverage.out
 
       # Node.js
