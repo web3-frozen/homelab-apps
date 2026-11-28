@@ -124,14 +124,13 @@ jobs:
         if: inputs.go-version != ''
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         env:
-          # The app repos use builder scale sets capped at 1 CPU / 1536Mi
-          # (the 2Gi homelab-apps pool is not what runs this job). On a cold
-          # module+build cache (go.sum change invalidates the setup-go cache
-          # key) golangci-lint exceeded that limit and the runner pod died
-          # mid-step, surfacing as "The self-hosted runner lost communication
-          # with the server". Keep the soft limit below the 1536Mi cgroup;
-          # GOGC is the fallback for older toolchains.
-          GOMEMLIMIT: "1100MiB"
+          # The app repos use builder scale sets capped at 1 CPU / 3Gi.
+          # On a cold module+build cache (go.sum change invalidates the
+          # setup-go cache key) golangci-lint exceeded 1536Mi and 2Gi and the
+          # runner pod died mid-step, surfacing as "The self-hosted runner
+          # lost communication with the server". Keep the soft limit below
+          # the 3Gi cgroup; GOGC is the fallback for older toolchains.
+          GOMEMLIMIT: "2500MiB"
           GOGC: "50"
         with:
           version: v2.15.0  # pinned: v2 default linters incl. errcheck; 'latest' caused surprise CI breaks
@@ -144,21 +143,21 @@ jobs:
       - name: Go test
         if: inputs.go-version != ''
         env:
-          # Same 1 CPU / 1536Mi builder pod cap as the lint step above. A
+          # Same 1 CPU / 3Gi builder pod cap as the lint step above. A
           # go.sum change invalidates the setup-go cache, so this runs cold;
           # an unbounded `go test -race ./...` then OOMs the pod and the step
           # dies as "The self-hosted runner lost communication with the server"
           # (onchain-monitor #89, 2026-11-28: failed this way on 2 of 3 attempts).
-          # 1100MiB leaves headroom for the race detector and the OS; -p 1
+          # 2000MiB leaves headroom for the race detector and the OS; -p 1
           # keeps one race-compile in flight at a time.
-          GOMEMLIMIT: "1100MiB"
+          GOMEMLIMIT: "2000MiB"
           GOGC: "50"
         run: go test -race -p 1 ./...
 
       - name: Go coverage
         if: inputs.go-version != ''
         env:
-          GOMEMLIMIT: "1100MiB"
+          GOMEMLIMIT: "2000MiB"
           GOGC: "50"
         run: |
           go test -p 1 -coverprofile=coverage.out ./... || true
