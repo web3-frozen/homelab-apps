@@ -55,6 +55,11 @@ on:
         description: "Node.js version (set to enable Node lint/test)"
         required: false
         type: string
+      lint-runner:
+        description: "Optional dedicated runner label for the lint-test job"
+        required: false
+        type: string
+        default: ""
       trivy-severity:
         description: "Trivy severity threshold"
         required: false
@@ -108,7 +113,7 @@ jobs:
   # ── Lint & Test ──────────────────────────────────────────────
   lint-test:
     name: Lint & Test
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && format('homelab-{0}', github.event.repository.name) || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-latest' || (inputs.lint-runner != '' && inputs.lint-runner || format('homelab-{0}', github.event.repository.name)) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
