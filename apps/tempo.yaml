@@ -16,6 +16,11 @@ spec:
     helm:
       valuesObject:
         fullnameOverride: tempo
+        # Temporary: the tempo volume has a stale Longhorn mount on worker-2;
+        # worker-1 is the last node where it mounted cleanly. Remove after the
+        # Longhorn node restart/maintenance.
+        nodeSelector:
+          kubernetes.io/hostname: k3s-worker-1
         tempo:
           retention: 168h
           reportingEnabled: false
